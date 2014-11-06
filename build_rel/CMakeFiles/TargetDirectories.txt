@@ -1,1 +1,0 @@
-/home/mindy/Documents/cs225a/scl-manips-v2.git/tutorial/tetrisbot/build_rel/CMakeFiles/tetrisbot.dir
