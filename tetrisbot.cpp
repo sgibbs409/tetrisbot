@@ -115,7 +115,7 @@ void moveTo(Eigen::VectorXd & x_goal, int target_x, int target_y, int &curr_x, i
 {
   curr_y = max(0, min(NUM_SQUARES_HIGH, target_y));
   curr_x = max(0, min(NUM_SQUARES_WIDE, target_x));
-  x_goal(2) = SQUARE_SIZE*(curr_y-NUM_SQUARES_HIGH/2);
+  x_goal(2) = -SQUARE_SIZE*(curr_y-NUM_SQUARES_HIGH/2);
   x_goal(1) = SQUARE_SIZE*(curr_x-NUM_SQUARES_WIDE/2);
   cout << "moveTo" << endl;
   cout << "currx: " << curr_x << "  curr_y: " << curr_y << endl;
@@ -208,8 +208,9 @@ int main(int argc, char** argv)
   std::cout<<"\nIntegrating the robot's physics. \nWill test two different controllers.\n Press (x) to exit at anytime.";
   long long iter = 0; double dt=0.0001;
 
-  omp_set_num_threads(2);
+  omp_set_num_threads(3);
   int thread_id; double tstart, tcurr; flag = false;
+  int curr_x = NUM_SQUARES_WIDE/2; int curr_y = NUM_SQUARES_WIDE/2;
 
 #pragma omp parallel private(thread_id)
   {
@@ -223,7 +224,6 @@ int main(int argc, char** argv)
       rtask_hand->x_goal_(0) = 0.2;
       rtask_hand->x_goal_(1) = 0;
       rtask_hand->x_goal_(2) = 0;
-      int curr_x = NUM_SQUARES_WIDE/2; int curr_y = NUM_SQUARES_WIDE/2;
 
       while(true == scl_chai_glut_interface::CChaiGlobals::getData()->chai_glut_running)
       {
@@ -285,9 +285,21 @@ int main(int argc, char** argv)
       //Then terminate
       scl_chai_glut_interface::CChaiGlobals::getData()->chai_glut_running = false;
     }
-    else  //Read the rio data structure and updated rendered robot..
+    else if(thread_id==0) //Read the rio data structure and updated rendered robot..
       while(true == scl_chai_glut_interface::CChaiGlobals::getData()->chai_glut_running)
       { glutMainLoopEvent(); const timespec ts = {0, 15000000};/*15ms*/ nanosleep(&ts,NULL); }
+    else if(thread_id==2) {
+      // Handle input from the game
+      string s;
+      while(getline(cin,s)) if(s.size()>=4 && s.substr(0,4)=="SCL ") {
+	istringstream is(s.substr(4,-1));
+	int x,y,r;
+	is >> x >> y >> r;
+	cout << s << " -> " << x << " " << y << " " << r << endl;
+	cout.flush();
+	moveTo(rtask_hand->x_goal_, x, y, curr_x, curr_y);
+      }
+    }
   }
 
   /******************************Exit Gracefully************************************/

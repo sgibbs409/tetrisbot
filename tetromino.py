@@ -297,6 +297,8 @@ def runGame():
 
         if fallingPiece is not None:
             print "PUMA: Target position and orientation is (%s,%s) %s\n" % (fallingPiece['x'],fallingPiece['y'],fallingPiece['rotation'])
+            print "SCL %s %s %s\n" % (fallingPiece['x'],fallingPiece['y'],fallingPiece['rotation'])
+            sys.stdout.flush()
 
         # drawing everything on the screen
         DISPLAYSURF.fill(BGCOLOR)
