@@ -141,9 +141,10 @@ int main(int argc, char** argv)
   scl::CControllerMultiTask rctr;    //A multi-task controller
   std::vector<scl::STaskBase*> rtasks;              //A set of executable tasks
   std::vector<scl::SNonControlTaskBase*> rtasks_nc; //A set of non-control tasks
-  std::string must_use_robot;        //Used later for file error checks.
+  //std::string must_use_robot;        //Used later for file error checks.
+  std::vector<scl::sString2> ctrl_params;        //Used to parse extra xml tags
   scl::STaskOpPos* rtask_hand;       //Will need to set hand desired positions etc.
-  scl::* rtask_hand;       //Will need to set hand desired positions etc.
+  //scl::* rtask_hand;       //Will need to set hand desired positions etc.
 
   sutil::CSystemClock::start(); //Start the clock
 
@@ -158,7 +159,7 @@ int main(int argc, char** argv)
   /******************************Load Robot Specification************************************/
   //We will use a slightly more complex xml spec than the first few tutorials
   const std::string fname("../../specs/Puma/PumaCfg.xml");
-  bool flag = p.readRobotFromFile(fname,"PumaBot",rds);
+  bool flag = p.readRobotFromFile(fname,"../../specs/","PumaBot",rds);
   flag = flag && rgcm.init(rds);            //Simple way to set up dynamic tree...
   flag = flag && dyn_tao.init(rds);         //Set up integrator object
   flag = flag && dyn_scl.init(rds);         //Set up kinematics and dynamics object
@@ -168,8 +169,8 @@ int main(int argc, char** argv)
 
   /******************************Set up Controller Specification************************************/
   // Read xml file info into task specifications.
-  flag = p.readTaskControllerFromFile(fname,"opc",must_use_robot,rtasks,rtasks_nc);
-  if(must_use_robot != "PumaBot") {flag = false;} //Error check for file consistency
+  flag = p.readTaskControllerFromFile(fname,"opc",rtasks,rtasks_nc,ctrl_params);
+  //if(must_use_robot != "PumaBot") {flag = false;} //Error check for file consistency
   flag = flag && rctr_ds.init("opc",&rds,&rio,&rgcm); //Set up the control data structure..
   // Tasks are initialized after find their type with dynamic typing.
   flag = flag && scl_registry::registerNativeDynamicTypes();
