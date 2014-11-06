@@ -165,7 +165,7 @@ int main(int argc, char* argv[])
 	x_des.setZero();
         x_des(0) = x_init(0)+0.1;
         x_des(1) = x_init(1)+0.1;
-        rio.actuators_.force_gc_commanded_ = J.transpose() * (kp*(x_des-x) - kv * dx) + rgcm.force_gc_grav_;
+        rio.actuators_.force_gc_commanded_ = J.transpose() * (kp*(x_des-x) - kv * dx);
 
         cout << "x " << x << endl;
         cout << "dx " << dx << endl;
