@@ -111,6 +111,19 @@ void moveDown(Eigen::VectorXd & x_goal, int &curr_x, int &curr_y)
 }
 
 
+void moveTo(Eigen::VectorXd & x_goal, int target_x, int target_y, int &curr_x, int &curr_y)
+{
+  curr_y = max(0, min(NUM_SQUARES_HIGH, target_y));
+  curr_x = max(0, min(NUM_SQUARES_WIDE, target_x));
+  x_goal(2) = SQUARE_SIZE*(curr_y-NUM_SQUARES_HIGH/2);
+  x_goal(1) = SQUARE_SIZE*(curr_x-NUM_SQUARES_WIDE/2);
+  cout << "moveTo" << endl;
+  cout << "currx: " << curr_x << "  curr_y: " << curr_y << endl;
+}
+
+
+
+
 /** A sample application to demonstrate a physics simulation in scl.
  *
  * Moving forward from tutorial 4, we will now control the 6 DOF
@@ -238,8 +251,28 @@ int main(int argc, char** argv)
 	    if(!is_button_pressed)
 		moveUp(rtask_hand->x_goal_, curr_x, curr_y);
 	    is_button_pressed = true; // for debouncing
+	} else if(scl_chai_glut_interface::CChaiGlobals::getData()->keys_active['z'])
+	{
+	    if(!is_button_pressed)
+		moveUp(rtask_hand->x_goal_, curr_x, curr_y);
+	    is_button_pressed = true; // for debouncing
 	} else {
 	    is_button_pressed = false;
+	}
+
+	// Set up the keypad 1 through 9 keys to go to the corners and centers
+	// I don't think we need to care about bouncing in this case
+	double xf[] = {0,1,2,0,1,2,0,1,2};
+	double yf[] = {0,0,0,1,1,1,2,2,2};
+	// actually, no.  for some reason the number keys don't work well?? use yuihjknm, instead
+	// actually, no.  those are already used for something-ish, and also seems to not work.
+	char letters[] = "nm,hjkyui"; // actually, yes, these do work
+	for(int i=0; i<9; i++) {
+	  if(scl_chai_glut_interface::CChaiGlobals::getData()->keys_active[letters[i]]) {
+	    std::cout << "Huh" << std::endl;
+	    std::cout.flush();
+	    moveTo(rtask_hand->x_goal_, NUM_SQUARES_WIDE*xf[i]/2, NUM_SQUARES_HIGH*yf[i]/2, curr_x, curr_y);
+	  }
 	}
 
         // Compute control forces (note that these directly have access to the io data ds).
