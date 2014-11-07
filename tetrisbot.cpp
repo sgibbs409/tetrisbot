@@ -65,6 +65,34 @@ const int NUM_SQUARES_HIGH = 20;
 const int NUM_SQUARES_WIDE = 10;
 const float SQUARE_SIZE = 0.035;
 
+int rotation=0;
+
+double dy1[] = {0.1, 0, -0.1, 0};
+double dz1[] = {0, 0.1, 0, -0.1};
+double dy2[] = {0, -0.1, 0, 0.1};
+double dz2[] = {0.1, 0, -0.1, 0};
+
+void update_hands(Eigen::VectorXd& hand_goal, Eigen::VectorXd& hand_goal1, Eigen::VectorXd& hand_goal2, Eigen::VectorXd& hand_goal3) {
+  hand_goal1 = hand_goal;
+  hand_goal1(1) += dy1[rotation];
+  hand_goal1(2) += dz1[rotation];
+  hand_goal2 = hand_goal;
+  hand_goal2(1) += dy2[rotation];
+  hand_goal2(2) += dz2[rotation];
+  hand_goal3 = hand_goal;
+  hand_goal3(0) += 0.1;
+}
+
+//Rotation control
+void rotateRight(){
+  rotation=(rotation+1)%4;
+  cout << "Set rotation to " << rotation << endl;
+}
+void rotateLeft(){
+  rotation=(rotation+3)%4;
+  cout << "Set rotation to " << rotation << endl;
+}
+
 // Translation controls
 void moveLeft(Eigen::VectorXd & x_goal, int &curr_x, int &curr_y)
 {
@@ -157,6 +185,9 @@ int main(int argc, char** argv)
   //std::string must_use_robot;        //Used later for file error checks.
   std::vector<scl::sString2> ctrl_params;        //Used to parse extra xml tags
   scl::STaskOpPos* rtask_hand;       //Will need to set hand desired positions etc.
+  scl::STaskOpPos* rtask_hand1;       //Will need to set hand desired positions etc.
+  scl::STaskOpPos* rtask_hand2;       //Will need to set hand desired positions etc.
+  scl::STaskOpPos* rtask_hand3;       //Will need to set hand desired positions etc.
   //scl::* rtask_hand;       //Will need to set hand desired positions etc.
 
   sutil::CSystemClock::start(); //Start the clock
@@ -171,7 +202,7 @@ int main(int argc, char** argv)
 
   /******************************Load Robot Specification************************************/
   //We will use a slightly more complex xml spec than the first few tutorials
-  const std::string fname("../../specs/Puma/PumaCfg.xml");
+  const std::string fname("PumaCfg.xml");
   bool flag = p.readRobotFromFile(fname,"../../specs/","PumaBot",rds);
   flag = flag && rgcm.init(rds);            //Simple way to set up dynamic tree...
   flag = flag && dyn_tao.init(rds);         //Set up integrator object
@@ -192,7 +223,12 @@ int main(int argc, char** argv)
   if(false == flag){ return 1; }            //Error check.
 
   rtask_hand = dynamic_cast<scl::STaskOpPos*>( *(rctr_ds.tasks_.at("hand")) );
+  rtask_hand1 = dynamic_cast<scl::STaskOpPos*>( *(rctr_ds.tasks_.at("hand1")) );
+  rtask_hand2 = dynamic_cast<scl::STaskOpPos*>( *(rctr_ds.tasks_.at("hand2")) );
+  rtask_hand3 = dynamic_cast<scl::STaskOpPos*>( *(rctr_ds.tasks_.at("hand3")) );
   if(NULL == rtask_hand)  {return 1;}       //Error check
+  if(NULL == rtask_hand1)  {return 1;}       //Error check
+  if(NULL == rtask_hand2)  {return 1;}       //Error check
 
   /******************************ChaiGlut Graphics************************************/
   glutInit(&argc, argv); // We will use glut for the window pane (not the graphics).
@@ -221,7 +257,7 @@ int main(int argc, char** argv)
       tstart = sutil::CSystemClock::getSysTime(); iter = 0;
 
       // initialize
-      rtask_hand->x_goal_(0) = 0.2;
+      rtask_hand->x_goal_(0) = 0.4;
       rtask_hand->x_goal_(1) = 0;
       rtask_hand->x_goal_(2) = 0;
 
@@ -247,9 +283,18 @@ int main(int argc, char** argv)
 		moveRight(rtask_hand->x_goal_, curr_x, curr_y);
 	    is_button_pressed = true; // for debouncing
 	} else if(scl_chai_glut_interface::CChaiGlobals::getData()->keys_active['w'])
-	{
+		{
+		    if(!is_button_pressed)
+			moveUp(rtask_hand->x_goal_, curr_x, curr_y);
+		    is_button_pressed = true; // for debouncing
+	} else if(scl_chai_glut_interface::CChaiGlobals::getData()->keys_active['q'])
+		{
+		    if(!is_button_pressed)
+			rotateLeft();
+		    is_button_pressed = true; // for debouncing
+	} else if(scl_chai_glut_interface::CChaiGlobals::getData()->keys_active['e']) {
 	    if(!is_button_pressed)
-		moveUp(rtask_hand->x_goal_, curr_x, curr_y);
+		rotateRight();
 	    is_button_pressed = true; // for debouncing
 	} else if(scl_chai_glut_interface::CChaiGlobals::getData()->keys_active['z'])
 	{
@@ -275,6 +320,8 @@ int main(int argc, char** argv)
 	  }
 	}
 
+	update_hands(rtask_hand->x_goal_, rtask_hand1->x_goal_, rtask_hand2->x_goal_, rtask_hand3->x_goal_);
+
         // Compute control forces (note that these directly have access to the io data ds).
         rctr.computeDynamics();
         rctr.computeControlForces();
@@ -297,7 +344,9 @@ int main(int argc, char** argv)
 	is >> x >> y >> r;
 	cout << s << " -> " << x << " " << y << " " << r << endl;
 	cout.flush();
+	rotation = r;
 	moveTo(rtask_hand->x_goal_, x, y, curr_x, curr_y);
+	update_hands(rtask_hand->x_goal_, rtask_hand1->x_goal_, rtask_hand2->x_goal_, rtask_hand3->x_goal_);
       }
     }
   }
