@@ -1,9 +1,9 @@
-﻿Build started 11/17/2014 11:15:42 PM.
+﻿Build started 11/20/2014 10:59:18 AM.
      1>Project "C:\Users\Mindy Huang\Documents\Programming\simple_client_2014\PumaClient.vcxproj" on node 2 (build target(s)).
      1>InitializeBuildStatus:
          Creating "Debug\PumaClient.unsuccessfulbuild" because "AlwaysCreate" was specified.
        ClCompile:
-         c:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /I.\include /I.\Robot /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _VC80_UPGRADE=0x0710 /D _MBCS /Gm /EHsc /RTC1 /MTd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt PumaClient.cpp
+         c:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /I.\include /I.\Robot /IC:\opencv\build\\include /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _VC80_UPGRADE=0x0710 /D _MBCS /Gm /EHsc /RTC1 /MTd /GS /fp:precise /Zc:wchar_t /Zc:forScope /openmp /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt PumaClient.cpp
          PumaClient.cpp
      1>c:\users\mindy huang\documents\programming\simple_client_2014\robot\unitmsg.h(123): warning C4996: 'strncpy': This function or variable may be unsafe. Consider using strncpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
                  c:\program files (x86)\microsoft visual studio 10.0\vc\include\string.h(188) : see declaration of 'strncpy'
@@ -35,13 +35,15 @@
      1>c:\users\mindy huang\documents\programming\simple_client_2014\include\param.h(66): warning C4305: 'initializing' : truncation from 'double' to 'const Float'
      1>c:\users\mindy huang\documents\programming\simple_client_2014\include\param.h(67): warning C4305: 'initializing' : truncation from 'double' to 'const Float'
      1>c:\users\mindy huang\documents\programming\simple_client_2014\include\param.h(68): warning C4305: 'initializing' : truncation from 'double' to 'const Float'
-     1>c:\users\mindy huang\documents\programming\simple_client_2014\pumaclient.cpp(29): warning C4305: 'initializing' : truncation from 'double' to 'const float'
-     1>c:\users\mindy huang\documents\programming\simple_client_2014\pumaclient.cpp(50): warning C4244: '=' : conversion from 'int' to 'float', possible loss of data
-     1>c:\users\mindy huang\documents\programming\simple_client_2014\pumaclient.cpp(67): warning C4305: '=' : truncation from 'double' to 'float'
+     1>c:\users\mindy huang\documents\programming\simple_client_2014\pumaclient.cpp(35): warning C4305: 'initializing' : truncation from 'double' to 'const float'
+     1>c:\users\mindy huang\documents\programming\simple_client_2014\pumaclient.cpp(56): warning C4244: '=' : conversion from 'int' to 'float', possible loss of data
+     1>c:\users\mindy huang\documents\programming\simple_client_2014\pumaclient.cpp(136): warning C4244: '=' : conversion from 'double' to 'int', possible loss of data
+     1>c:\users\mindy huang\documents\programming\simple_client_2014\pumaclient.cpp(137): warning C4244: '=' : conversion from 'double' to 'int', possible loss of data
+     1>c:\users\mindy huang\documents\programming\simple_client_2014\pumaclient.cpp(213): warning C4305: '=' : truncation from 'double' to 'float'
        ManifestResourceCompile:
          All outputs are up-to-date.
        Link:
-         c:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"Debug\PumaClient.exe" /INCREMENTAL /NOLOGO /LIBPATH:.\lib ws2_32.lib matrix.lib newmat10.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /ManifestFile:"Debug\PumaClient.exe.intermediate.manifest" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /DEBUG /PDB:"Debug\PumaClient.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE:NO /IMPLIB:"Debug\PumaClient.lib" /MACHINE:X86 Debug\PumaClient.exe.embed.manifest.res
+         c:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"Debug\PumaClient.exe" /INCREMENTAL /NOLOGO /LIBPATH:.\lib /LIBPATH:C:\opencv\build\\x86\vc10\lib ws2_32.lib matrix.lib newmat10.lib opencv_calib3d2410d.lib opencv_contrib2410d.lib opencv_core2410d.lib opencv_features2d2410d.lib opencv_flann2410d.lib opencv_gpu2410d.lib opencv_highgui2410d.lib opencv_imgproc2410d.lib opencv_legacy2410d.lib opencv_ml2410d.lib opencv_nonfree2410d.lib opencv_objdetect2410d.lib opencv_ocl2410d.lib opencv_photo2410d.lib opencv_stitching2410d.lib opencv_superres2410d.lib opencv_ts2410d.lib opencv_video2410d.lib opencv_videostab2410d.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /ManifestFile:"Debug\PumaClient.exe.intermediate.manifest" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /DEBUG /PDB:"Debug\PumaClient.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE:NO /IMPLIB:"Debug\PumaClient.lib" /MACHINE:X86 Debug\PumaClient.exe.embed.manifest.res
          Debug\PumaClient.obj
          Debug\RobotCom.obj
          Debug\unitMsg.obj
@@ -58,4 +60,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:10.95
+Time Elapsed 00:00:32.79
