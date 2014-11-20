@@ -285,23 +285,23 @@ def runGame():
             lastMoveDownTime = time.time()
 
 
-        # let the piece fall if it is time to fall
-        if time.time() - lastFallTime > fallFreq:
-            # NoneType check
-            if fallingPiece == None:
-                pass
-             # see if the piece has landed
-            elif not isValidPosition(board, fallingPiece, adjY=1):
-                # falling piece has landed, set it on the board
-                print "PUMA: Deposit piece on board at (%s, %s) %s\n" % (fallingPiece['x'],fallingPiece['y'],fallingPiece['rotation'])
-                addToBoard(board, fallingPiece)
-                score += removeCompleteLines(board)
-                level, fallFreq = calculateLevelAndFallFreq(score)
-                fallingPiece = None
-            else:
-                # piece did not land, just move the piece down
-                fallingPiece['y'] += 1
-                lastFallTime = time.time()
+        # # let the piece fall if it is time to fall
+        # if time.time() - lastFallTime > fallFreq:
+        #     # NoneType check
+        #     if fallingPiece == None:
+        #         pass
+        #      # see if the piece has landed
+        #     elif not isValidPosition(board, fallingPiece, adjY=1):
+        #         # falling piece has landed, set it on the board
+        #         print "PUMA: Deposit piece on board at (%s, %s) %s\n" % (fallingPiece['x'],fallingPiece['y'],fallingPiece['rotation'])
+        #         addToBoard(board, fallingPiece)
+        #         score += removeCompleteLines(board)
+        #         level, fallFreq = calculateLevelAndFallFreq(score)
+        #         fallingPiece = None
+        #     else:
+        #         # piece did not land, just move the piece down
+        #         fallingPiece['y'] += 1
+        #         lastFallTime = time.time()
 
         if fallingPiece is not None:
             print "PUMA: Target position and orientation is (%s,%s) %s\n" % (fallingPiece['x'],fallingPiece['y'],fallingPiece['rotation'])
