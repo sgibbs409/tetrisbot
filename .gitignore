@@ -1,2 +1,6 @@
 build_rel
 tetrisbot
+*.log
+*.tlog
+*.opensdf
+*.sdf

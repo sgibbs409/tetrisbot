@@ -34,8 +34,13 @@ const int NUM_SQUARES_HIGH = 20;
 const int NUM_SQUARES_WIDE = 10;
 const float SQUARE_SIZE = 0.005;
 
-// number of arguments describing the end-effector - x,y,z,alpha,beta,gamma.
-const int NUM_ARGS = 6;
+#define QREACHEDTOL 10 // fine tune this parameter
+#define QREACHEDITER 100 // fine tune this parameter
+
+// number of arguments describing the end-effector
+const int X_DOF = 7; // task space
+const int J_DOF = 6; // Joint space
+
 enum Position {
 	X,
 	Y,
@@ -58,8 +63,9 @@ void moveTo(float *x_goal, int target_x, int target_y, int &curr_x, int &curr_y,
   cout << "currx: " << curr_x << "  curr_y: " << curr_y << " curr_rotation:  " << x_goal[GAMMA] << endl;
 }
 
-void waitForStart()
+void waitForStart(RobotCom *PumaRobot)
 {
+	PumaRobot->_float();
     cout << "Float..." << endl;
 	cout << "Disengage E-stop and hit 's'" << endl;
 	char key;
@@ -73,7 +79,49 @@ void waitForStart()
 	cout << "Starting tasks..." << endl;
 }
 
+bool xposReached(float* xd, float *x)
+{
+     float xTolerance = 0;
+	 static int reachedCntr = 0;
+	 for(int i = 0; i < J_DOF; i ++)
+	 {
+		xTolerance += (xd[i]-x[i])*(xd[i]-x[i]);
+	 }
+	 if(xTolerance < QREACHEDTOL)
+	 reachedCntr ++;
+	 else
+	 reachedCntr = 0;
+ 
+	 if(reachedCntr >= QREACHEDITER)
+	 {
+		 reachedCntr = 0;
+		 return true;
+	 }
+	 return false;
+}
 
+bool jposReached(float *qd, float *q)
+{
+	 float qTolerance = 0;
+	 static int reachedCntr = 0;
+	 for(int i = 0; i < J_DOF; i ++)
+	 {
+		qTolerance += (qd[i]-q[i])*(qd[i]-q[i]);
+	 }
+	 if(qTolerance < QREACHEDTOL)
+	 reachedCntr ++;
+	 else
+	 reachedCntr = 0;
+ 
+	 if(reachedCntr >= QREACHEDITER)
+	 {
+		 reachedCntr = 0;
+		 return true;
+	 }
+	 return false;
+}
+
+/*
 // Thresholding constants
 int iLowH = 166;
 int iHighH = 178;
@@ -86,6 +134,7 @@ int iHighV = 255;
 
 int MAX_X;
 int MAX_Y;
+
 
 VideoCapture initCamera()
 {
@@ -189,28 +238,70 @@ void AimEndEffector(RobotCom* PumaRobot)
 {
 	//Point targetPoint = 
 }
+*/
+
+// Move to joint position via jgoto
+void MoveJGOTO(RobotCom *Robot, float *qd, float *q, float *dq)
+{
+	 // Output the joint command
+	 Robot->jointControl(JGOTO, qd[0], qd[1], qd[2], qd[3], qd[4], qd[5]);
+	 
+	 // Wait for the robot to finish motion
+     do
+	 {
+	 Robot->getStatus(GET_JPOS,q);
+	 Robot->getStatus(GET_JVEL,dq);
+	 }while(!jposReached(qd,q));
+}
+
+void MoveGOTO(RobotCom *Robot, float *xd, float *x)
+{
+	 // Output the joint command
+	 Robot->control(GOTO, xd, 7);
+	 
+	 // Wait for the robot to finish motion
+     do
+	 {
+	 Robot->getStatus(GET_IPOS,x);
+	 }while(!xposReached(xd,x));
+}
 
 void pickUpBlock()
 {
 	// fill in
 }
 
+void goHome(RobotCom* bot)
+{
+	float xd_[X_DOF] = {0, -0.7, 0, 0.5,0.5,0.5,-0.5};
+	float x_[X_DOF];
+	
+	float qd_[J_DOF] = {-90,-45,180,0,-45,0}; // in degrees
+	float dq_[J_DOF], q_[J_DOF]; 
+	  
+	MoveJGOTO(bot, qd_, q_, dq_);
+	MoveGOTO(bot, xd_, x_);
+}
+
 int _tmain(int argc, _TCHAR* argv[])
 {
-	//RobotCom* PumaRobot = new RobotCom();
-    //PumaRobot->_float();
-	//waitForStart();
+	// start up
+	RobotCom* PumaRobot = new RobotCom();
+	waitForStart(PumaRobot);
+
+	goHome(PumaRobot);
+	cout << "home!" << endl;
 
 	// Initialize Camera
-	VideoCapture cap = initCamera();
+	//VideoCapture cap = initCamera();
 	
 	// initialize game board variables
-	int curr_x = NUM_SQUARES_WIDE/2; int curr_y = NUM_SQUARES_WIDE/2;
-	int rotation=0;
-	float x_goal[NUM_ARGS];
-	for (int i = 0; i < NUM_ARGS; i++)
-		x_goal[i] = 0;
-	x_goal[0] =  0.4; // set the end-effector forwad a bit in the x-axis direction
+	//int curr_x = NUM_SQUARES_WIDE/2; int curr_y = NUM_SQUARES_WIDE/2;
+	//int rotation=0;
+	//float x_goal[X_DOF];
+	//for (int i = 0; i < NUM_ARGS; i++)
+	//	x_goal[i] = 0;
+	//x_goal[0] =  0.4; // set the end-effector forwad a bit in the x-axis direction
 
 	// Threading stuffs
 	#pragma omp parallel num_threads(2)
@@ -221,6 +312,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		{
 			Mat img;
 			while(true) {
+				//PumaRobot->control(GOTO, x_goal, 6);
 				//if(!UpdateCamera(cap, img)) break;
 			}
 		}
@@ -234,12 +326,16 @@ int _tmain(int argc, _TCHAR* argv[])
 				is >> x >> y >> r;
 				cout << s << " -> " << x << " " << y << " " << r << endl;
 				cout.flush();
-				rotation = r;
-				moveTo(x_goal, x, y, curr_x, curr_y, rotation);
+//				rotation = r;
+//				moveTo(x_goal, x, y, curr_x, curr_y, rotation);
 			  }
 		  }
 		}
 	  }
+
+	  PumaRobot->_float();
+	  Sleep(2000);
+	  PumaRobot->~RobotCom();
 
   return 0;
 }
