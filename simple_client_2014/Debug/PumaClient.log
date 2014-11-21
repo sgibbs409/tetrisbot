@@ -1,9 +1,9 @@
-﻿Build started 11/20/2014 5:08:24 PM.
+﻿Build started 11/20/2014 5:53:38 PM.
      1>Project "C:\Users\Mindy Huang\Documents\Programming\tetrisbot\simple_client_2014\PumaClient.vcxproj" on node 2 (build target(s)).
      1>InitializeBuildStatus:
-         Touching "Debug\PumaClient.unsuccessfulbuild".
+         Creating "Debug\PumaClient.unsuccessfulbuild" because "AlwaysCreate" was specified.
        ClCompile:
-         c:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /I.\include /I.\Robot /IC:\opencv\build\\include /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _VC80_UPGRADE=0x0710 /D _MBCS /Gm /EHsc /RTC1 /MTd /GS /fp:precise /Zc:wchar_t /Zc:forScope /openmp /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt PumaClient.cpp
+         c:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /I.\include /I.\Robot /IC:\opencv\build\\include /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _VC80_UPGRADE=0x0710 /D _MBCS /Gm /EHsc /RTC1 /MTd /GS /fp:precise /Zc:wchar_t /Zc:forScope /openmp /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt PumaClient.cpp Robot\RobotCom.cpp Robot\unitMsg.cpp
          PumaClient.cpp
      1>c:\users\mindy huang\documents\programming\tetrisbot\simple_client_2014\robot\unitmsg.h(123): warning C4996: 'strncpy': This function or variable may be unsafe. Consider using strncpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
                  c:\program files (x86)\microsoft visual studio 10.0\vc\include\string.h(188) : see declaration of 'strncpy'
@@ -36,8 +36,13 @@
      1>c:\users\mindy huang\documents\programming\tetrisbot\simple_client_2014\include\param.h(67): warning C4305: 'initializing' : truncation from 'double' to 'const Float'
      1>c:\users\mindy huang\documents\programming\tetrisbot\simple_client_2014\include\param.h(68): warning C4305: 'initializing' : truncation from 'double' to 'const Float'
      1>c:\users\mindy huang\documents\programming\tetrisbot\simple_client_2014\pumaclient.cpp(35): warning C4305: 'initializing' : truncation from 'double' to 'const float'
-     1>c:\users\mindy huang\documents\programming\tetrisbot\simple_client_2014\pumaclient.cpp(61): warning C4244: '=' : conversion from 'int' to 'float', possible loss of data
-     1>c:\users\mindy huang\documents\programming\tetrisbot\simple_client_2014\pumaclient.cpp(276): warning C4305: 'initializing' : truncation from 'double' to 'float'
+     1>c:\users\mindy huang\documents\programming\tetrisbot\simple_client_2014\pumaclient.cpp(277): warning C4305: 'initializing' : truncation from 'double' to 'float'
+     1>c:\users\mindy huang\documents\programming\tetrisbot\simple_client_2014\pumaclient.cpp(290): warning C4305: 'initializing' : truncation from 'double' to 'float'
+     1>c:\users\mindy huang\documents\programming\tetrisbot\simple_client_2014\pumaclient.cpp(290): warning C4305: 'initializing' : truncation from 'double' to 'float'
+         Generating Code...
+         Skipping... (no relevant changes detected)
+         unitMsg.cpp
+         RobotCom.cpp
        ManifestResourceCompile:
          All outputs are up-to-date.
        Link:
@@ -45,22 +50,6 @@
          Debug\PumaClient.obj
          Debug\RobotCom.obj
          Debug\unitMsg.obj
-     1>newmat10.lib(BANDMAT.obj) : warning LNK4099: PDB 'vc70.pdb' was not found with 'newmat10.lib(BANDMAT.obj)' or at 'C:\Users\Mindy Huang\Documents\Programming\tetrisbot\simple_client_2014\Debug\vc70.pdb'; linking object as if no debug info
-     1>newmat10.lib(EVALUE.obj) : warning LNK4099: PDB 'vc70.pdb' was not found with 'newmat10.lib(EVALUE.obj)' or at 'C:\Users\Mindy Huang\Documents\Programming\tetrisbot\simple_client_2014\Debug\vc70.pdb'; linking object as if no debug info
-     1>newmat10.lib(MYEXCEPT.obj) : warning LNK4099: PDB 'vc70.pdb' was not found with 'newmat10.lib(MYEXCEPT.obj)' or at 'C:\Users\Mindy Huang\Documents\Programming\tetrisbot\simple_client_2014\Debug\vc70.pdb'; linking object as if no debug info
-     1>newmat10.lib(NEWMAT1.obj) : warning LNK4099: PDB 'vc70.pdb' was not found with 'newmat10.lib(NEWMAT1.obj)' or at 'C:\Users\Mindy Huang\Documents\Programming\tetrisbot\simple_client_2014\Debug\vc70.pdb'; linking object as if no debug info
-     1>newmat10.lib(NEWMAT2.obj) : warning LNK4099: PDB 'vc70.pdb' was not found with 'newmat10.lib(NEWMAT2.obj)' or at 'C:\Users\Mindy Huang\Documents\Programming\tetrisbot\simple_client_2014\Debug\vc70.pdb'; linking object as if no debug info
-     1>newmat10.lib(NEWMAT3.obj) : warning LNK4099: PDB 'vc70.pdb' was not found with 'newmat10.lib(NEWMAT3.obj)' or at 'C:\Users\Mindy Huang\Documents\Programming\tetrisbot\simple_client_2014\Debug\vc70.pdb'; linking object as if no debug info
-     1>newmat10.lib(NEWMAT4.obj) : warning LNK4099: PDB 'vc70.pdb' was not found with 'newmat10.lib(NEWMAT4.obj)' or at 'C:\Users\Mindy Huang\Documents\Programming\tetrisbot\simple_client_2014\Debug\vc70.pdb'; linking object as if no debug info
-     1>newmat10.lib(NEWMAT5.obj) : warning LNK4099: PDB 'vc70.pdb' was not found with 'newmat10.lib(NEWMAT5.obj)' or at 'C:\Users\Mindy Huang\Documents\Programming\tetrisbot\simple_client_2014\Debug\vc70.pdb'; linking object as if no debug info
-     1>newmat10.lib(NEWMAT6.obj) : warning LNK4099: PDB 'vc70.pdb' was not found with 'newmat10.lib(NEWMAT6.obj)' or at 'C:\Users\Mindy Huang\Documents\Programming\tetrisbot\simple_client_2014\Debug\vc70.pdb'; linking object as if no debug info
-     1>newmat10.lib(NEWMAT7.obj) : warning LNK4099: PDB 'vc70.pdb' was not found with 'newmat10.lib(NEWMAT7.obj)' or at 'C:\Users\Mindy Huang\Documents\Programming\tetrisbot\simple_client_2014\Debug\vc70.pdb'; linking object as if no debug info
-     1>newmat10.lib(NEWMAT8.obj) : warning LNK4099: PDB 'vc70.pdb' was not found with 'newmat10.lib(NEWMAT8.obj)' or at 'C:\Users\Mindy Huang\Documents\Programming\tetrisbot\simple_client_2014\Debug\vc70.pdb'; linking object as if no debug info
-     1>newmat10.lib(NEWMATEX.obj) : warning LNK4099: PDB 'vc70.pdb' was not found with 'newmat10.lib(NEWMATEX.obj)' or at 'C:\Users\Mindy Huang\Documents\Programming\tetrisbot\simple_client_2014\Debug\vc70.pdb'; linking object as if no debug info
-     1>newmat10.lib(NEWMATRM.obj) : warning LNK4099: PDB 'vc70.pdb' was not found with 'newmat10.lib(NEWMATRM.obj)' or at 'C:\Users\Mindy Huang\Documents\Programming\tetrisbot\simple_client_2014\Debug\vc70.pdb'; linking object as if no debug info
-     1>newmat10.lib(SORT.obj) : warning LNK4099: PDB 'vc70.pdb' was not found with 'newmat10.lib(SORT.obj)' or at 'C:\Users\Mindy Huang\Documents\Programming\tetrisbot\simple_client_2014\Debug\vc70.pdb'; linking object as if no debug info
-     1>newmat10.lib(SUBMAT.obj) : warning LNK4099: PDB 'vc70.pdb' was not found with 'newmat10.lib(SUBMAT.obj)' or at 'C:\Users\Mindy Huang\Documents\Programming\tetrisbot\simple_client_2014\Debug\vc70.pdb'; linking object as if no debug info
-     1>newmat10.lib(SVD.obj) : warning LNK4099: PDB 'vc70.pdb' was not found with 'newmat10.lib(SVD.obj)' or at 'C:\Users\Mindy Huang\Documents\Programming\tetrisbot\simple_client_2014\Debug\vc70.pdb'; linking object as if no debug info
        Manifest:
          c:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\mt.exe /nologo /verbose /out:"Debug\PumaClient.exe.embed.manifest" /manifest Debug\PumaClient.exe.intermediate.manifest
          All outputs are up-to-date.
@@ -74,4 +63,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:13.80
+Time Elapsed 00:00:11.25
