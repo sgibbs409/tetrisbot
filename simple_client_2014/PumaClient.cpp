@@ -32,7 +32,7 @@ using namespace cv;
 // constants of game board
 const int NUM_SQUARES_HIGH = 20;
 const int NUM_SQUARES_WIDE = 10;
-const float SQUARE_SIZE = 0.05;
+const float SQUARE_SIZE = 0.03;
 
 #define XREACHEDTOL 0.1
 #define QREACHEDTOL 20 // fine tune this parameter
@@ -84,7 +84,7 @@ bool xposReached(float* xd, float *x)
 {
      float xTolerance = 0;
 	 static int reachedCntr = 0;
-	 for(int i = 0; i < J_DOF; i ++)
+	 for(int i = 0; i < X_DOF; i ++)
 	 {
 		xTolerance += (xd[i]-x[i])*(xd[i]-x[i]);
 	 }
@@ -244,6 +244,7 @@ void AimEndEffector(RobotCom* PumaRobot)
 // Move to joint position via jgoto
 void MoveJGOTO(RobotCom *Robot, float *qd, float *q, float *dq)
 {
+    cout << "Start JGOTO" << endl;
 	 // Output the joint command
 	 Robot->jointControl(JGOTO, qd[0], qd[1], qd[2], qd[3], qd[4], qd[5]);
 	 
@@ -253,10 +254,12 @@ void MoveJGOTO(RobotCom *Robot, float *qd, float *q, float *dq)
 	 Robot->getStatus(GET_JPOS,q);
 	 Robot->getStatus(GET_JVEL,dq);
 	 }while(!jposReached(qd,q));
+    cout << "Complete JGOTO" << endl;
 }
 
 void MoveGOTO(RobotCom *Robot, float *xd, float *x)
 {
+    cout << "Start GOTO" << endl;
 	 // Output the joint command
 	 Robot->control(GOTO, xd, 7);
 	 
@@ -265,6 +268,7 @@ void MoveGOTO(RobotCom *Robot, float *xd, float *x)
 	 {
 	 Robot->getStatus(GET_IPOS,x);
 	 }while(!xposReached(xd,x));
+    cout << "Complete GOTO" << endl;
 }
 
 void pickUpBlock()
@@ -275,6 +279,7 @@ void pickUpBlock()
 void goHome(RobotCom* bot, float *x_goal)
 {
 	float xd_[X_DOF] = {0, -0.7, 0, 0.5,0.5,0.5,-0.5};
+	for(int i=0; i<X_DOF; i++) x_goal[i] = xd_[i];
 	x_goal = xd_;
 	float x_[X_DOF];
 	
@@ -288,7 +293,7 @@ void goHome(RobotCom* bot, float *x_goal)
 void moveToTop(RobotCom* bot, float *x_goal)
 {
 	float xd_[X_DOF] = {0, -0.7, 0.3, 0.5,0.5,0.5,-0.5};
-	x_goal = xd_;
+	for(int i=0; i<X_DOF; i++) x_goal[i] = xd_[i];
 	float x_[X_DOF];
 	
 	MoveGOTO(bot, xd_, x_);
