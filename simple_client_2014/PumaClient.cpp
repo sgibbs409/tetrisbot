@@ -32,10 +32,16 @@ using namespace cv;
 // constants of game board
 const int NUM_SQUARES_HIGH = 20;
 const int NUM_SQUARES_WIDE = 10;
-const float SQUARE_SIZE = 0.005;
+const float SQUARE_SIZE = 0.03;
 
-// number of arguments describing the end-effector - x,y,z,alpha,beta,gamma.
-const int NUM_ARGS = 6;
+#define XREACHEDTOL 0.1
+#define QREACHEDTOL 20 // fine tune this parameter
+#define REACHEDITER 100 // fine tune this parameter
+
+// number of arguments describing the end-effector
+const int X_DOF = 7; // task space
+const int J_DOF = 6; // Joint space
+
 enum Position {
 	X,
 	Y,
@@ -50,16 +56,17 @@ void moveTo(float *x_goal, int target_x, int target_y, int &curr_x, int &curr_y,
   curr_y = max(0, min(NUM_SQUARES_HIGH, target_y));
   curr_x = max(0, min(NUM_SQUARES_WIDE, target_x));
   
-  x_goal[Y] = SQUARE_SIZE*(curr_x-NUM_SQUARES_WIDE/2);
+  x_goal[X] = SQUARE_SIZE*(curr_x-NUM_SQUARES_WIDE/2);
   x_goal[Z] = -SQUARE_SIZE*(curr_y-NUM_SQUARES_HIGH/2);
 
-  x_goal[GAMMA] = (rotation * 90) % 360;
+ // x_goal[GAMMA] = (rotation * 90) % 360;
   
   cout << "currx: " << curr_x << "  curr_y: " << curr_y << " curr_rotation:  " << x_goal[GAMMA] << endl;
 }
 
-void waitForStart()
+void waitForStart(RobotCom *PumaRobot)
 {
+	PumaRobot->_float();
     cout << "Float..." << endl;
 	cout << "Disengage E-stop and hit 's'" << endl;
 	char key;
@@ -73,7 +80,49 @@ void waitForStart()
 	cout << "Starting tasks..." << endl;
 }
 
+bool xposReached(float* xd, float *x)
+{
+     float xTolerance = 0;
+	 static int reachedCntr = 0;
+	 for(int i = 0; i < X_DOF; i ++)
+	 {
+		xTolerance += (xd[i]-x[i])*(xd[i]-x[i]);
+	 }
+	 if(xTolerance < XREACHEDTOL)
+	 reachedCntr ++;
+	 else
+	 reachedCntr = 0;
+ 
+	 if(reachedCntr >= REACHEDITER)
+	 {
+		 reachedCntr = 0;
+		 return true;
+	 }
+	 return false;
+}
 
+bool jposReached(float *qd, float *q)
+{
+	 float qTolerance = 0;
+	 static int reachedCntr = 0;
+	 for(int i = 0; i < J_DOF; i ++)
+	 {
+		qTolerance += (qd[i]-q[i])*(qd[i]-q[i]);
+	 }
+	 if(qTolerance < QREACHEDTOL)
+	 reachedCntr ++;
+	 else
+	 reachedCntr = 0;
+ 
+	 if(reachedCntr >= REACHEDITER)
+	 {
+		 reachedCntr = 0;
+		 return true;
+	 }
+	 return false;
+}
+
+/*
 // Thresholding constants
 int iLowH = 166;
 int iHighH = 178;
@@ -86,6 +135,7 @@ int iHighV = 255;
 
 int MAX_X;
 int MAX_Y;
+
 
 VideoCapture initCamera()
 {
@@ -189,28 +239,85 @@ void AimEndEffector(RobotCom* PumaRobot)
 {
 	//Point targetPoint = 
 }
+*/
+
+// Move to joint position via jgoto
+void MoveJGOTO(RobotCom *Robot, float *qd, float *q, float *dq)
+{
+    cout << "Start JGOTO" << endl;
+	 // Output the joint command
+	 Robot->jointControl(JGOTO, qd[0], qd[1], qd[2], qd[3], qd[4], qd[5]);
+	 
+	 // Wait for the robot to finish motion
+     do
+	 {
+	 Robot->getStatus(GET_JPOS,q);
+	 Robot->getStatus(GET_JVEL,dq);
+	 }while(!jposReached(qd,q));
+    cout << "Complete JGOTO" << endl;
+}
+
+void MoveGOTO(RobotCom *Robot, float *xd, float *x)
+{
+    cout << "Start GOTO" << endl;
+	 // Output the joint command
+	 Robot->control(GOTO, xd, 7);
+	 
+	 // Wait for the robot to finish motion
+     do
+	 {
+	 Robot->getStatus(GET_IPOS,x);
+	 }while(!xposReached(xd,x));
+    cout << "Complete GOTO" << endl;
+}
 
 void pickUpBlock()
 {
 	// fill in
 }
 
+void goHome(RobotCom* bot, float *x_goal)
+{
+	float xd_[X_DOF] = {0, -0.7, 0, 0.5,0.5,0.5,-0.5};
+	for(int i=0; i<X_DOF; i++) x_goal[i] = xd_[i];
+	x_goal = xd_;
+	float x_[X_DOF];
+	
+	float qd_[J_DOF] = {-90,-45,180,0,-45,0}; // in degrees
+	float dq_[J_DOF], q_[J_DOF]; 
+	  
+	MoveJGOTO(bot, qd_, q_, dq_);
+	MoveGOTO(bot, xd_, x_);
+}
+
+void moveToTop(RobotCom* bot, float *x_goal)
+{
+	float xd_[X_DOF] = {0, -0.7, 0.3, 0.5,0.5,0.5,-0.5};
+	for(int i=0; i<X_DOF; i++) x_goal[i] = xd_[i];
+	float x_[X_DOF];
+	
+	MoveGOTO(bot, xd_, x_);
+	cout << "top" << endl;
+}
+
 int _tmain(int argc, _TCHAR* argv[])
 {
-	//RobotCom* PumaRobot = new RobotCom();
-    //PumaRobot->_float();
-	//waitForStart();
+	// start up
+	float x_goal[X_DOF];
+	RobotCom* PumaRobot = new RobotCom();
+	waitForStart(PumaRobot);
+	goHome(PumaRobot, x_goal);
+	cout << "home!" << endl;
+	//cin << "press any key to continue";
+
+	//moveToTop(PumaRobot, x_goal);
 
 	// Initialize Camera
-	VideoCapture cap = initCamera();
+	//VideoCapture cap = initCamera();
 	
 	// initialize game board variables
 	int curr_x = NUM_SQUARES_WIDE/2; int curr_y = NUM_SQUARES_WIDE/2;
 	int rotation=0;
-	float x_goal[NUM_ARGS];
-	for (int i = 0; i < NUM_ARGS; i++)
-		x_goal[i] = 0;
-	x_goal[0] =  0.4; // set the end-effector forwad a bit in the x-axis direction
 
 	// Threading stuffs
 	#pragma omp parallel num_threads(2)
@@ -219,8 +326,10 @@ int _tmain(int argc, _TCHAR* argv[])
 		
 		if(thread_id==0) 
 		{
-			Mat img;
+			//Mat img;
 			while(true) {
+				float x_[X_DOF];
+				MoveGOTO(PumaRobot, x_goal, x_);
 				//if(!UpdateCamera(cap, img)) break;
 			}
 		}
@@ -240,6 +349,10 @@ int _tmain(int argc, _TCHAR* argv[])
 		  }
 		}
 	  }
+
+	  PumaRobot->_float();
+	  Sleep(2000);
+	  PumaRobot->~RobotCom();
 
   return 0;
 }
