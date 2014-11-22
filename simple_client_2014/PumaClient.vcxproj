@@ -101,6 +101,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Robot\cs225.h" />
+    <ClInclude Include="Robot\Magnet.h" />
     <ClInclude Include="Robot\PrGlobalDefn.h" />
     <ClInclude Include="Robot\PrNetworkDefn.h" />
     <ClInclude Include="Robot\RobotCom.h" />
@@ -108,6 +109,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="PumaClient.cpp" />
+    <ClCompile Include="Robot\magnetControllerAPI.cpp" />
     <ClCompile Include="Robot\RobotCom.cpp" />
     <ClCompile Include="Robot\unitMsg.cpp" />
   </ItemGroup>
