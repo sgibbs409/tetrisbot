@@ -156,24 +156,26 @@ PIECES = {'S': S_SHAPE_TEMPLATE,
 
 
 def main():
+    print "\n\n"
+    sys.stdout.flush()
     global FPSCLOCK, DISPLAYSURF, BASICFONT, BIGFONT
     pygame.init()
     FPSCLOCK = pygame.time.Clock()
     DISPLAYSURF = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT))
-    BASICFONT = pygame.font.Font('freesansbold.ttf', 18)
-    BIGFONT = pygame.font.Font('freesansbold.ttf', 100)
+    ##BASICFONT = pygame.font.Font('freesansbold.ttf', 18)
+    ##BIGFONT = pygame.font.Font('freesansbold.ttf', 100)
     pygame.display.set_caption('Tetromino')
 
     showTextScreen('Tetromino')
     while True: # game loop
         if random.randint(0, 1) == 0:
-            pygame.mixer.music.load('tetrisb.mid')
+            pass#pygame.mixer.music.load('tetrisb.mid')
         else:
-            pygame.mixer.music.load('tetrisc.mid')
-        pygame.mixer.music.play(-1, 0.0)
+            pass#pygame.mixer.music.load('tetrisc.mid')
+        #pygame.mixer.music.play(-1, 0.0)
         runGame()
-        pygame.mixer.music.stop()
-        showTextScreen('Game Over')
+        #pygame.mixer.music.stop()
+        #showTextScreen('Game Over')
 
 
 def runGame():
@@ -193,7 +195,23 @@ def runGame():
 
     while True: # game loop
         if fallingPiece == None:
-            # No falling piece in play, so start a new piece at the top
+	    # let the robot move back to the top safely
+	    #RESET_DELAY = 2
+	    #if time.time() > lastFallTime + RESET_DELAY:
+	    print "SCL %s %s %s\n" % (int(BOARDWIDTH / 2) - int(TEMPLATEWIDTH / 2), 15, 0)
+            sys.stdout.flush()
+            time.sleep(0.5)
+	    print "SCL %s %s %s\n" % (int(BOARDWIDTH / 2) - int(TEMPLATEWIDTH / 2), 10, 0)
+            sys.stdout.flush()
+            time.sleep(0.5)
+	    print "SCL %s %s %s\n" % (int(BOARDWIDTH / 2) - int(TEMPLATEWIDTH / 2), 5, 0)
+            sys.stdout.flush()
+            time.sleep(0.5)
+	    print "SCL %s %s %s\n" % (int(BOARDWIDTH / 2) - int(TEMPLATEWIDTH / 2), -2, 0)
+            sys.stdout.flush()
+            time.sleep(0.5)
+	    #else:
+                # No falling piece in play, so start a new piece at the top
             fallingPiece = nextPiece
             nextPiece = getNewPiece()
             print "PUMA: pick up new piece %s\n" % nextPiece
@@ -281,7 +299,7 @@ def runGame():
 
 
         # let the piece fall if it is time to fall
-        if time.time() - lastFallTime > fallFreq:
+        '''if time.time() - lastFallTime > fallFreq:
             # see if the piece has landed
             if not isValidPosition(board, fallingPiece, adjY=1):
                 # falling piece has landed, set it on the board
@@ -294,7 +312,7 @@ def runGame():
                 # piece did not land, just move the piece down
                 fallingPiece['y'] += 1
                 lastFallTime = time.time()
-
+'''
         if fallingPiece is not None:
             print "PUMA: Target position and orientation is (%s,%s) %s\n" % (fallingPiece['x'],fallingPiece['y'],fallingPiece['rotation'])
             print "SCL %s %s %s\n" % (fallingPiece['x'],fallingPiece['y'],fallingPiece['rotation'])
@@ -338,23 +356,26 @@ def showTextScreen(text):
     # This function displays large text in the
     # center of the screen until a key is pressed.
     # Draw the text drop shadow
-    titleSurf, titleRect = makeTextObjs(text, BIGFONT, TEXTSHADOWCOLOR)
-    titleRect.center = (int(WINDOWWIDTH / 2), int(WINDOWHEIGHT / 2))
-    DISPLAYSURF.blit(titleSurf, titleRect)
+    #titleSurf, titleRect = makeTextObjs(text, BIGFONT, TEXTSHADOWCOLOR)
+    #titleRect.center = (int(WINDOWWIDTH / 2), int(WINDOWHEIGHT / 2))
+    #DISPLAYSURF.blit(titleSurf, titleRect)
 
     # Draw the text
-    titleSurf, titleRect = makeTextObjs(text, BIGFONT, TEXTCOLOR)
-    titleRect.center = (int(WINDOWWIDTH / 2) - 3, int(WINDOWHEIGHT / 2) - 3)
-    DISPLAYSURF.blit(titleSurf, titleRect)
+    #titleSurf, titleRect = makeTextObjs(text, BIGFONT, TEXTCOLOR)
+    #titleRect.center = (int(WINDOWWIDTH / 2) - 3, int(WINDOWHEIGHT / 2) - 3)
+    #DISPLAYSURF.blit(titleSurf, titleRect)
 
     # Draw the additional "Press a key to play." text.
-    pressKeySurf, pressKeyRect = makeTextObjs('Press a key to play.', BASICFONT, TEXTCOLOR)
-    pressKeyRect.center = (int(WINDOWWIDTH / 2), int(WINDOWHEIGHT / 2) + 100)
-    DISPLAYSURF.blit(pressKeySurf, pressKeyRect)
+    #pressKeySurf, pressKeyRect = makeTextObjs('Press a key to play.', BASICFONT, TEXTCOLOR)
+    #pressKeyRect.center = (int(WINDOWWIDTH / 2), int(WINDOWHEIGHT / 2) + 100)
+    #DISPLAYSURF.blit(pressKeySurf, pressKeyRect)
 
     while checkForKeyPress() == None:
         pygame.display.update()
         FPSCLOCK.tick()
+
+    print "s\n"
+    sys.stdout.flush()
 
 
 def checkForQuit():
@@ -369,8 +390,9 @@ def checkForQuit():
 def calculateLevelAndFallFreq(score):
     # Based on the score, return the level the player is on and
     # how many seconds pass until a falling piece falls one space.
+    FALL_DELAY = 0.5 # to let the robot catch up
     level = int(score / 10) + 1
-    fallFreq = 0.27 - (level * 0.02)
+    fallFreq = 0.27 - (level * 0.02) + FALL_DELAY
     return level, fallFreq
 
 def getNewPiece():
@@ -479,14 +501,15 @@ def drawBoard(board):
 
 
 def drawStatus(score, level):
+    return
     # draw the score text
-    scoreSurf = BASICFONT.render('Score: %s' % score, True, TEXTCOLOR)
+    #scoreSurf = BASICFONT.render('Score: %s' % score, True, TEXTCOLOR)
     scoreRect = scoreSurf.get_rect()
     scoreRect.topleft = (WINDOWWIDTH - 150, 20)
     DISPLAYSURF.blit(scoreSurf, scoreRect)
 
     # draw the level text
-    levelSurf = BASICFONT.render('Level: %s' % level, True, TEXTCOLOR)
+    #levelSurf = BASICFONT.render('Level: %s' % level, True, TEXTCOLOR)
     levelRect = levelSurf.get_rect()
     levelRect.topleft = (WINDOWWIDTH - 150, 50)
     DISPLAYSURF.blit(levelSurf, levelRect)
@@ -507,10 +530,10 @@ def drawPiece(piece, pixelx=None, pixely=None):
 
 def drawNextPiece(piece):
     # draw the "next" text
-    nextSurf = BASICFONT.render('Next:', True, TEXTCOLOR)
-    nextRect = nextSurf.get_rect()
-    nextRect.topleft = (WINDOWWIDTH - 120, 80)
-    DISPLAYSURF.blit(nextSurf, nextRect)
+    #nextSurf = BASICFONT.render('Next:', True, TEXTCOLOR)
+    #nextRect = nextSurf.get_rect()
+    #nextRect.topleft = (WINDOWWIDTH - 120, 80)
+    #DISPLAYSURF.blit(nextSurf, nextRect)
     # draw the "next" piece
     drawPiece(piece, pixelx=WINDOWWIDTH-120, pixely=100)
 
