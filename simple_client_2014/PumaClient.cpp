@@ -5,13 +5,13 @@
 #include "RobotCom.h"
 #include <iostream>
 #include <omp.h>
-#include <tchar.h>
+//#include <tchar.h>
 
 //you will need to change PrNetworkDefn and Robot.cpp based on the 
 //QNX computer you are using
 //Copy cs225a.h from your cs225asim directory
 //#include "PrVector.h"
-//#include "PrVector3.h"
+//#include "Prvector3.h"
 //#include "PrMatrix.h"
 //#include "PrMatrix3.h"
 #include <fstream>
@@ -22,12 +22,12 @@
 #include "math.h"
 
 // opencv libraries
-#include <opencv2/objdetect/objdetect.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
+//#include <opencv2/objdetect/objdetect.hpp>
+//#include <opencv2/highgui/highgui.hpp>
+//#include <opencv2/imgproc/imgproc.hpp>
 
 using namespace std;
-using namespace cv;
+//using namespace cv;
 
 // constants of game board
 const int NUM_SQUARES_HIGH = 20;
@@ -300,7 +300,8 @@ void moveToTop(RobotCom* bot, float *x_goal)
 	cout << "top" << endl;
 }
 
-int _tmain(int argc, _TCHAR* argv[])
+//int _tmain(int argc, _TCHAR* argv[])
+int main(int argc, char **argv)
 {
 	// start up
 	float x_goal[X_DOF];
@@ -351,7 +352,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	  }
 
 	  PumaRobot->_float();
-	  Sleep(2000);
+	  //Sleep(2000);
 	  PumaRobot->~RobotCom();
 
   return 0;

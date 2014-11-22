@@ -6,3 +6,4 @@ tetrisbot
 *.sdf
 *.obj
 *.exe
+*.ipch
