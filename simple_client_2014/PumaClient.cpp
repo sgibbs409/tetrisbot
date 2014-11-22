@@ -10,13 +10,13 @@
 //you will need to change PrNetworkDefn and Robot.cpp based on the 
 //QNX computer you are using
 //Copy cs225a.h from your cs225asim directory
-#include "prvector.h"
-#include "prvector3.h"
-#include "prmatrix.h"
-#include "prmatrix3.h"
+//#include "PrVector.h"
+//#include "PrVector3.h"
+//#include "PrMatrix.h"
+//#include "PrMatrix3.h"
 #include <fstream>
 #include <sstream>
-#include "param.h"
+//#include "param.h"
 #include <string>
 #include <stdlib.h>
 #include "math.h"
@@ -122,7 +122,7 @@ bool jposReached(float *qd, float *q)
 	 return false;
 }
 
-/*
+
 // Thresholding constants
 int iLowH = 166;
 int iHighH = 178;
@@ -239,7 +239,7 @@ void AimEndEffector(RobotCom* PumaRobot)
 {
 	//Point targetPoint = 
 }
-*/
+
 
 // Move to joint position via jgoto
 void MoveJGOTO(RobotCom *Robot, float *qd, float *q, float *dq)
