@@ -203,6 +203,7 @@ def main():
         runGame()
         pygame.mixer.music.stop()
         showTextScreen('Game Over')
+        break
 
     sock.close()
 
@@ -411,7 +412,7 @@ def checkForQuit():
 def calculateLevelAndFallFreq(score):
     # Based on the score, return the level the player is on and
     # how many seconds pass until a falling piece falls one space.
-    FALL_DELAY = 0.0 # to let the robot catch up
+    FALL_DELAY = 0.3 # to let the robot catch up
     level = int(score / 10) + 1
     fallFreq = 0.27 - (level * 0.02) + FALL_DELAY
     return level, fallFreq
@@ -522,7 +523,6 @@ def drawBoard(board):
 
 
 def drawStatus(score, level):
-    return
     # draw the score text
     scoreSurf = BASICFONT.render('Score: %s' % score, True, TEXTCOLOR)
     scoreRect = scoreSurf.get_rect()
