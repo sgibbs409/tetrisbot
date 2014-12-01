@@ -3,7 +3,7 @@
 # http://inventwithpython.com/pygame
 # Released under a "Simplified BSD" license
 
-import random, time, pygame, sys
+import random, time, pygame, sys, socket
 from pygame.locals import *
 
 FPS = 25
@@ -154,11 +154,27 @@ PIECES = {'S': S_SHAPE_TEMPLATE,
           'O': O_SHAPE_TEMPLATE,
           'T': T_SHAPE_TEMPLATE}
 
+# Send message and wait for "OK\r\n"
+def puma_cmd(cmd):
+    print cmd
+    sys.stdout.flush()
+    sock.send(cmd)
+    data = sock.recv(4) 
+    print '"%s"\n'%data
+    sys.stdout.flush()
+
+def puma_moveto(x, y, r):
+    puma_cmd("SCL %s %s %s\n" % (x,y,r))
+
+def puma_place():
+    puma_cmd("PLACE\n")
+
 
 def main():
     print "\n\n"
     sys.stdout.flush()
     global FPSCLOCK, DISPLAYSURF, BASICFONT, BIGFONT
+    global sock
     pygame.init()
     FPSCLOCK = pygame.time.Clock()
     DISPLAYSURF = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT))
@@ -166,7 +182,18 @@ def main():
     BIGFONT = pygame.font.Font('freesansbold.ttf', 100)
     pygame.display.set_caption('Tetromino')
 
+    host = '' 
+    port = 8189 
+    backlog = 5 
+    size = 1024 
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
+    s.bind((host,port)) 
+    s.listen(backlog) 
+
     showTextScreen('Tetromino')
+
+    sock, address = s.accept() 
+
     while True: # game loop
         if random.randint(0, 1) == 0:
             pygame.mixer.music.load('tetrisb.mid')
@@ -176,6 +203,8 @@ def main():
         runGame()
         pygame.mixer.music.stop()
         showTextScreen('Game Over')
+
+    sock.close()
 
 
 def runGame():
@@ -198,18 +227,10 @@ def runGame():
 	    # let the robot move back to the top safely
 	    #RESET_DELAY = 2
 	    #if time.time() > lastFallTime + RESET_DELAY:
-	    print "SCL %s %s %s\n" % (int(BOARDWIDTH / 2) - int(TEMPLATEWIDTH / 2), 15, 0)
-            sys.stdout.flush()
-            time.sleep(0.5)
-	    print "SCL %s %s %s\n" % (int(BOARDWIDTH / 2) - int(TEMPLATEWIDTH / 2), 10, 0)
-            sys.stdout.flush()
-            time.sleep(0.5)
-	    print "SCL %s %s %s\n" % (int(BOARDWIDTH / 2) - int(TEMPLATEWIDTH / 2), 5, 0)
-            sys.stdout.flush()
-            time.sleep(0.5)
-	    print "SCL %s %s %s\n" % (int(BOARDWIDTH / 2) - int(TEMPLATEWIDTH / 2), -2, 0)
-            sys.stdout.flush()
-            time.sleep(0.5)
+	    puma_moveto(int(BOARDWIDTH / 2) - int(TEMPLATEWIDTH / 2), 15, 0)
+	    puma_moveto(int(BOARDWIDTH / 2) - int(TEMPLATEWIDTH / 2), 10, 0)
+	    puma_moveto(int(BOARDWIDTH / 2) - int(TEMPLATEWIDTH / 2), 5, 0)
+	    puma_moveto(int(BOARDWIDTH / 2) - int(TEMPLATEWIDTH / 2), -2, 0)
 	    #else:
                 # No falling piece in play, so start a new piece at the top
             fallingPiece = nextPiece
@@ -299,11 +320,12 @@ def runGame():
 
 
         # let the piece fall if it is time to fall
-        '''if time.time() - lastFallTime > fallFreq:
+        if time.time() - lastFallTime > fallFreq:
             # see if the piece has landed
             if not isValidPosition(board, fallingPiece, adjY=1):
                 # falling piece has landed, set it on the board
                 print "PUMA: Deposit piece on board at (%s, %s) %s\n" % (fallingPiece['x'],fallingPiece['y'],fallingPiece['rotation'])
+                puma_place()
                 addToBoard(board, fallingPiece)
                 score += removeCompleteLines(board)
                 level, fallFreq = calculateLevelAndFallFreq(score)
@@ -312,11 +334,10 @@ def runGame():
                 # piece did not land, just move the piece down
                 fallingPiece['y'] += 1
                 lastFallTime = time.time()
-'''
+
         if fallingPiece is not None:
             print "PUMA: Target position and orientation is (%s,%s) %s\n" % (fallingPiece['x'],fallingPiece['y'],fallingPiece['rotation'])
-            print "SCL %s %s %s\n" % (fallingPiece['x'],fallingPiece['y'],fallingPiece['rotation'])
-            sys.stdout.flush()
+            puma_moveto(fallingPiece['x'],fallingPiece['y'],fallingPiece['rotation'])
 
         # drawing everything on the screen
         DISPLAYSURF.fill(BGCOLOR)
@@ -390,7 +411,7 @@ def checkForQuit():
 def calculateLevelAndFallFreq(score):
     # Based on the score, return the level the player is on and
     # how many seconds pass until a falling piece falls one space.
-    FALL_DELAY = 0.5 # to let the robot catch up
+    FALL_DELAY = 0.0 # to let the robot catch up
     level = int(score / 10) + 1
     fallFreq = 0.27 - (level * 0.02) + FALL_DELAY
     return level, fallFreq

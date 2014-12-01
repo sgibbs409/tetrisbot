@@ -15,3 +15,9 @@ When run it allows you to play the game, and also outputs to the command line co
 First of all the tetrisbot directory has to reside in 'scl-manips-v2/tutorial/'.  If it is anywhere else it needs to be moved there first (git does not mind)
 
 Then you can run them together as "sh make_rel.sh && python tetromino.py | ./tetrisbot"
+
+### Running on the PUMA
+
+1) Install pygame
+2) Run the game: in simpleclient2014/tetris "python tetromino.py"
+3) Compile and run the code: in simpleclient2014 "sh README.txt", selecting the default for both servers
