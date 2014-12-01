@@ -53,6 +53,12 @@ enum Position {
 	GAMMA
 };
 
+float orientations[4][4] = {
+    {0.5, 0.5, 0.5, -0.5},
+    {0.5, 0.5, 0.5, -0.5},
+    {0.5, 0.5, 0.5, -0.5},
+    {0.5, 0.5, 0.5, -0.5}};
+
 void moveTo(float *x_goal, int target_x, int target_y, int &curr_x, int &curr_y, int rotation)
 {
   //curr_y = max(0, min(NUM_SQUARES_HIGH, target_y));
@@ -62,6 +68,8 @@ void moveTo(float *x_goal, int target_x, int target_y, int &curr_x, int &curr_y,
   
   x_goal[X] = SQUARE_SIZE*(curr_x-NUM_SQUARES_WIDE/2);
   x_goal[Z] = -SQUARE_SIZE*(curr_y-NUM_SQUARES_HIGH/2);
+  assert(rotation>=0 && rotation<4);
+  for(int i=0; i<4; i++) x_goal[3+i] = orientations[rotation][i];
 
  // x_goal[GAMMA] = (rotation * 90) % 360;
   
@@ -351,13 +359,21 @@ int main(int argc, char **argv)
               rotation = r;
               moveTo(x_goal, x, y, curr_x, curr_y, rotation);
             }
-            if(s.size()>=4 && s.substr(0,2) == "Y ") {
+            if(s.size()>=2 && s.substr(0,2) == "Y ") {
               istringstream is(s.substr(2,-1));
               double y;
               is >> y;
-              cout << "Set T to " << y << endl;
+              cout << "Set Y to " << y << endl;
               cout.flush();
-              x_goal[1] = y;
+              x_goal[Y] = y;
+            }
+            if(s=="PLACE") {
+                //placeBlock();
+                x_goal[Y]=-0.8;
+                float x_[X_DOF];
+                MoveGOTO(PumaRobot, x_goal, x_);
+                TetrisServer->sendOK();
+                x_goal[Y]=-0.7;
             }
           }
 	  float x_[X_DOF];
