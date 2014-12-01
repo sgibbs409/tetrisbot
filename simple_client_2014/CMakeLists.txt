@@ -13,6 +13,7 @@ SET(CMAKE_BUILD_TYPE Release)
 
 SET(SOURCES PumaClient.cpp
             Robot/RobotCom.cpp
+            TetrisCom.cpp
             Robot/unitMsg.cpp
             Robot/cs225.h
 )

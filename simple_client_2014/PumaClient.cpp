@@ -3,6 +3,7 @@
 #pragma once
 
 #include "RobotCom.h"
+#include "TetrisCom.h"
 #include <iostream>
 //#include <omp.h>
 //#include "Magnet.h"
@@ -312,6 +313,14 @@ int main(int argc, char **argv)
 
 	// start up
 	float x_goal[X_DOF];
+	TetrisCom* TetrisServer = new TetrisCom();
+        if(false) {
+            string s;
+            while(TetrisServer->readLine(s)) {
+                    cout << "<<" << s << ">>" << endl;
+                    TetrisServer->sendOK();
+            }
+        }
 	RobotCom* PumaRobot = new RobotCom();
 	waitForStart(PumaRobot);
 	goHome(PumaRobot, x_goal);
@@ -331,7 +340,7 @@ int main(int argc, char **argv)
 	  //if(!UpdateCamera(cap, img)) break;
           // Handle input from the game
           std::string s;
-          while(getline(cin,s)) {
+          while(TetrisServer->readLine(s)) {
             if(s=="Q") break;
             if(s.size()>=4 && s.substr(0,4) == "SCL ") {
               istringstream is(s.substr(4,-1));
@@ -353,6 +362,7 @@ int main(int argc, char **argv)
           }
 	  float x_[X_DOF];
 	  MoveGOTO(PumaRobot, x_goal, x_);
+          TetrisServer->sendOK();
         }
 
         PumaRobot->_float();

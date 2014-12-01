@@ -192,23 +192,34 @@ def runGame():
 
     fallingPiece = getNewPiece()
     nextPiece = getNewPiece()
-  
+
     while True: # game loop
         if fallingPiece == None:
-            # let the robot move back to the top safely 
-            RESET_DELAY = 2
-            if time.time() > lastFallTime + RESET_DELAY:
-                print "SCL %s %s %s\n" % (int(BOARDWIDTH / 2) - int(TEMPLATEWIDTH / 2), -2, 0)
-            else:
+	    # let the robot move back to the top safely
+	    #RESET_DELAY = 2
+	    #if time.time() > lastFallTime + RESET_DELAY:
+	    print "SCL %s %s %s\n" % (int(BOARDWIDTH / 2) - int(TEMPLATEWIDTH / 2), 15, 0)
+            sys.stdout.flush()
+            time.sleep(0.5)
+	    print "SCL %s %s %s\n" % (int(BOARDWIDTH / 2) - int(TEMPLATEWIDTH / 2), 10, 0)
+            sys.stdout.flush()
+            time.sleep(0.5)
+	    print "SCL %s %s %s\n" % (int(BOARDWIDTH / 2) - int(TEMPLATEWIDTH / 2), 5, 0)
+            sys.stdout.flush()
+            time.sleep(0.5)
+	    print "SCL %s %s %s\n" % (int(BOARDWIDTH / 2) - int(TEMPLATEWIDTH / 2), -2, 0)
+            sys.stdout.flush()
+            time.sleep(0.5)
+	    #else:
                 # No falling piece in play, so start a new piece at the top
-                fallingPiece = nextPiece
-                nextPiece = getNewPiece()
-                print "PUMA: pick up new piece %s\n" % nextPiece
-                lastFallTime = time.time() # reset lastFallTime
+            fallingPiece = nextPiece
+            nextPiece = getNewPiece()
+            print "PUMA: pick up new piece %s\n" % nextPiece
+            lastFallTime = time.time() # reset lastFallTime
 
-                if not isValidPosition(board, fallingPiece):
-                    print "PUMA: game over\n"
-                    return # can't fit a new piece on the board, so game over
+            if not isValidPosition(board, fallingPiece):
+                print "PUMA: game over\n"
+                return # can't fit a new piece on the board, so game over
 
         checkForQuit()
         for event in pygame.event.get(): # event handling loop
@@ -288,23 +299,20 @@ def runGame():
 
 
         # let the piece fall if it is time to fall
-        # if time.time() - lastFallTime > fallFreq:
-        #     # NoneType check
-        #     if fallingPiece == None:
-        #         pass
-        #      # see if the piece has landed
-        #     elif not isValidPosition(board, fallingPiece, adjY=1):
-        #         # falling piece has landed, set it on the board
-        #         print "PUMA: Deposit piece on board at (%s, %s) %s\n" % (fallingPiece['x'],fallingPiece['y'],fallingPiece['rotation'])
-        #         addToBoard(board, fallingPiece)
-        #         score += removeCompleteLines(board)
-        #         level, fallFreq = calculateLevelAndFallFreq(score)
-        #         fallingPiece = None
-        #     else:
-        #         # piece did not land, just move the piece down
-        #         fallingPiece['y'] += 1
-        #         lastFallTime = time.time()
-
+        '''if time.time() - lastFallTime > fallFreq:
+            # see if the piece has landed
+            if not isValidPosition(board, fallingPiece, adjY=1):
+                # falling piece has landed, set it on the board
+                print "PUMA: Deposit piece on board at (%s, %s) %s\n" % (fallingPiece['x'],fallingPiece['y'],fallingPiece['rotation'])
+                addToBoard(board, fallingPiece)
+                score += removeCompleteLines(board)
+                level, fallFreq = calculateLevelAndFallFreq(score)
+                fallingPiece = None
+            else:
+                # piece did not land, just move the piece down
+                fallingPiece['y'] += 1
+                lastFallTime = time.time()
+'''
         if fallingPiece is not None:
             print "PUMA: Target position and orientation is (%s,%s) %s\n" % (fallingPiece['x'],fallingPiece['y'],fallingPiece['rotation'])
             print "SCL %s %s %s\n" % (fallingPiece['x'],fallingPiece['y'],fallingPiece['rotation'])
@@ -366,6 +374,9 @@ def showTextScreen(text):
         pygame.display.update()
         FPSCLOCK.tick()
 
+    print "s\n"
+    sys.stdout.flush()
+
 
 def checkForQuit():
     for event in pygame.event.get(QUIT): # get all the QUIT events
@@ -379,7 +390,7 @@ def checkForQuit():
 def calculateLevelAndFallFreq(score):
     # Based on the score, return the level the player is on and
     # how many seconds pass until a falling piece falls one space.
-    FALL_DELAY = 1  # to let the robot catch up
+    FALL_DELAY = 0.5 # to let the robot catch up
     level = int(score / 10) + 1
     fallFreq = 0.27 - (level * 0.02) + FALL_DELAY
     return level, fallFreq
@@ -388,8 +399,7 @@ def getNewPiece():
     # return a random new piece in a random rotation and color
     shape = random.choice(list(PIECES.keys()))
     newPiece = {'shape': shape,
-                'rotation': 0,  # since we're doing it robotically.
-                # 'rotation': random.randint(0, len(PIECES[shape]) - 1),
+                'rotation': random.randint(0, len(PIECES[shape]) - 1),
                 'x': int(BOARDWIDTH / 2) - int(TEMPLATEWIDTH / 2),
                 'y': -2, # start it above the board (i.e. less than 0)
                 'color': random.randint(0, len(COLORS)-1)}
@@ -417,10 +427,6 @@ def isOnBoard(x, y):
 
 
 def isValidPosition(board, piece, adjX=0, adjY=0):
-    # Nonetype check
-    if not piece:
-        return True
-
     # Return True if the piece is within the board and not colliding
     for x in range(TEMPLATEWIDTH):
         for y in range(TEMPLATEHEIGHT):
@@ -495,6 +501,7 @@ def drawBoard(board):
 
 
 def drawStatus(score, level):
+    return
     # draw the score text
     scoreSurf = BASICFONT.render('Score: %s' % score, True, TEXTCOLOR)
     scoreRect = scoreSurf.get_rect()
