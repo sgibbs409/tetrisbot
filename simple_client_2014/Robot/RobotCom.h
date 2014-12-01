@@ -5,15 +5,11 @@
 #include "unitMsg.h"
 #include "cs225.h"
 
-
 class RobotCom {
 public:
 	RobotCom();
 	~RobotCom();
-
-	void _float();
-	void _break();
-
+	void _float();	void _break();
 	// mode = NO_CONTROL, FLOATMODE,
 	//        NJHOLD, JHOLD, NHOLD, HOLD, OPEN,
     //		  NJMOVE, JMOVE, NJGOTO, JGOTO, NJTRACK, JTRACK,
@@ -35,10 +31,12 @@ public:
 
 	void setSocketBlock( bool fBlock );
 
-
 private:
-	SOCKET robotSocket;
-
+#ifdef WIN32
+    SOCKET robotSocket;
+#else
+    int robotSocket;
+#endif
     void sendMessage(AMsg &mOut);
     void processBrokenSocket();
 

@@ -7,6 +7,10 @@
 #include <WinSock.h>
 #else
 #include <netinet/in.h>
+#include <netdb.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/ioctl.h>
 #endif
 #include "PrGlobalDefn.h"
 #include "PrNetworkDefn.h"

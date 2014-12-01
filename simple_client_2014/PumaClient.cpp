@@ -4,8 +4,8 @@
 
 #include "RobotCom.h"
 #include <iostream>
-#include <omp.h>
-#include "Magnet.h"
+//#include <omp.h>
+//#include "Magnet.h"
 //#include <tchar.h>
 
 //you will need to change PrNetworkDefn and Robot.cpp based on the 
@@ -23,19 +23,19 @@
 #include "math.h"
 
 // opencv libraries
-#include <opencv2/objdetect/objdetect.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
+//#include <opencv2/objdetect/objdetect.hpp>
+//#include <opencv2/highgui/highgui.hpp>
+//#include <opencv2/imgproc/imgproc.hpp>
 
 using namespace std;
-using namespace cv;
+//using namespace cv;
 
 // constants of game board
 const int NUM_SQUARES_HIGH = 20;
 const int NUM_SQUARES_WIDE = 10;
-const float SQUARE_SIZE = 0.03;
+const float SQUARE_SIZE = 0.05;
 
-#define XREACHEDTOL 0.1
+#define XREACHEDTOL 0.2
 #define QREACHEDTOL 20 // fine tune this parameter
 #define REACHEDITER 100 // fine tune this parameter
 
@@ -54,8 +54,10 @@ enum Position {
 
 void moveTo(float *x_goal, int target_x, int target_y, int &curr_x, int &curr_y, int rotation)
 {
-  curr_y = max(0, min(NUM_SQUARES_HIGH, target_y));
-  curr_x = max(0, min(NUM_SQUARES_WIDE, target_x));
+  //curr_y = max(0, min(NUM_SQUARES_HIGH, target_y));
+  //curr_x = max(0, min(NUM_SQUARES_WIDE, target_x));
+  curr_y = target_y;
+  curr_x = target_x;
   
   x_goal[X] = SQUARE_SIZE*(curr_x-NUM_SQUARES_WIDE/2);
   x_goal[Z] = -SQUARE_SIZE*(curr_y-NUM_SQUARES_HIGH/2);
@@ -123,7 +125,7 @@ bool jposReached(float *qd, float *q)
 	 return false;
 }
 
-
+/*
 // Thresholding constants
 int iLowH = 166;
 int iHighH = 178;
@@ -240,7 +242,7 @@ void AimEndEffector(RobotCom* PumaRobot)
 {
 	//Point targetPoint = 
 }
-
+*/
 
 // Move to joint position via jgoto
 void MoveJGOTO(RobotCom *Robot, float *qd, float *q, float *dq)
@@ -305,8 +307,8 @@ void moveToTop(RobotCom* bot, float *x_goal)
 int main(int argc, char **argv)
 {
 
-	//HANDLE serial = magnetInit("COM6");
-	//magnetTest(serial);
+ 	//HANDLE serial = magnetInit("COM6");
+ 	//magnetTest(serial);
 
 	// start up
 	float x_goal[X_DOF];
@@ -325,40 +327,37 @@ int main(int argc, char **argv)
 	int curr_x = NUM_SQUARES_WIDE/2; int curr_y = NUM_SQUARES_WIDE/2;
 	int rotation=0;
 
-	// Threading stuffs
-	#pragma omp parallel num_threads(2)
-	  {
-		int thread_id = omp_get_thread_num();
-		
-		if(thread_id==0) 
-		{
-			//Mat img;
-			while(true) {
-				float x_[X_DOF];
-				MoveGOTO(PumaRobot, x_goal, x_);
-				//if(!UpdateCamera(cap, img)) break;
-			}
-		}
-		else {
-		  // Handle input from the game
-		  std::string s;
-		  while(getline(cin,s)) {
-			  if(s.size()>=4 && s.substr(0,4) == "SCL ") {
-				istringstream is(s.substr(4,-1));
-				int x,y,r;
-				is >> x >> y >> r;
-				cout << s << " -> " << x << " " << y << " " << r << endl;
-				cout.flush();
-				rotation = r;
-				moveTo(x_goal, x, y, curr_x, curr_y, rotation);
-			  }
-		  }
-		}
-	  }
+	while(true) {
+	  //if(!UpdateCamera(cap, img)) break;
+          // Handle input from the game
+          std::string s;
+          while(getline(cin,s)) {
+            if(s=="Q") break;
+            if(s.size()>=4 && s.substr(0,4) == "SCL ") {
+              istringstream is(s.substr(4,-1));
+              int x,y,r;
+              is >> x >> y >> r;
+              cout << s << " -> " << x << " " << y << " " << r << endl;
+              cout.flush();
+              rotation = r;
+              moveTo(x_goal, x, y, curr_x, curr_y, rotation);
+            }
+            if(s.size()>=4 && s.substr(0,2) == "Y ") {
+              istringstream is(s.substr(2,-1));
+              double y;
+              is >> y;
+              cout << "Set T to " << y << endl;
+              cout.flush();
+              x_goal[1] = y;
+            }
+          }
+	  float x_[X_DOF];
+	  MoveGOTO(PumaRobot, x_goal, x_);
+        }
 
-	  PumaRobot->_float();
-	  //Sleep(2000);
-	  PumaRobot->~RobotCom();
+        PumaRobot->_float();
+        //Sleep(2000);
+        PumaRobot->~RobotCom();
 
   return 0;
 }

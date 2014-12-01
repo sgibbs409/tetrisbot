@@ -5,6 +5,7 @@
 #include "RobotCom.h"
 #include <iostream>
 #include <omp.h>
+#include "Magnet.h"
 //#include <tchar.h>
 
 //you will need to change PrNetworkDefn and Robot.cpp based on the 
@@ -305,6 +306,10 @@ void moveToTop(RobotCom* bot, float *x_goal)
 //int _tmain(int argc, _TCHAR* argv[])
 int main(int argc, char **argv)
 {
+
+ 	//HANDLE serial = magnetInit("COM6");
+ 	//magnetTest(serial);
+
 	// start up
 	float x_goal[X_DOF];
 	RobotCom* PumaRobot = new RobotCom();

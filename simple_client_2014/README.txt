@@ -1,6 +1,3 @@
 mkdir build
 cd build
-cmake ..
-make
-
-./PumaClient
+cmake .. && make && ./PumaClient
