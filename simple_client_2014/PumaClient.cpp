@@ -33,6 +33,8 @@ const int NUM_SQUARES_HIGH = 20;
 const int NUM_SQUARES_WIDE = 10;
 const float SQUARE_SIZE = 0.05;
 
+const string BLOCK_POS_FILENAME = "block_pos.txt";
+
 #define XREACHEDTOL 0.2
 #define QREACHEDTOL 20 // fine tune this parameter
 #define REACHEDITER 100 // fine tune this parameter
@@ -41,13 +43,27 @@ const float SQUARE_SIZE = 0.05;
 const int X_DOF = 7; // task space
 const int J_DOF = 6; // Joint space
 
+// home position
+const float HOME_POS[X_DOF] = {0, -0.7, 0, 0.5, 0.5, 0.5,-0.5};
+
+// The positions of the tetrominos. Needs calibration.
+float squarePos[X_DOF];
+float linePos[X_DOF];
+float lPos[X_DOF];
+float reverseLPos[X_DOF];
+float tPos[X_DOF];
+float sPos[X_DOF];
+float zPos[X_DOF];
+
+
 enum Position {
 	X,
 	Y,
 	Z,
-	ALPHA,
-	BETA,
-	GAMMA
+	W,
+	VX,
+	VY,
+	VZ
 };
 
 float orientations[4][4] = {
@@ -71,7 +87,7 @@ void moveTo(float *x_goal, int target_x, int target_y, int &curr_x, int &curr_y,
 
  // x_goal[GAMMA] = (rotation * 90) % 360;
   
-  cout << "currx: " << curr_x << "  curr_y: " << curr_y << " curr_rotation:  " << x_goal[GAMMA] << endl;
+  cout << "currx: " << curr_x << "  curr_y: " << curr_y << " curr_rotation:  " << rotation << endl;
 }
 
 void waitForStart(RobotCom *PumaRobot)
@@ -281,14 +297,32 @@ void MoveGOTO(RobotCom *Robot, float *xd, float *x)
     cout << "Complete GOTO" << endl;
 }
 
-void pickUpBlock()
+void pickUpBlock(RobotCom* bot, float *block_pos)
 {
-	// fill in
+	float x_[X_DOF];
+	float pick_up_pos[X_DOF];
+	for(int i = 0; i < X_DOF; i++) pick_up_pos[i] = block_pos[i];
+	pick_up_pos[Z] += 0.05;
+
+	MoveGOTO(bot, block_pos, x_);
+
+	/* LOWER GAINS HERE */
+
+	MoveGOTO(bot, pick_up_pos, x_);
+
+	/* TURN ON MAGNETS HERE */
+
+	MoveGOTO(bot, block_pos, x_);
+
+	/* CHANGE GAINS BACK */
+
+	//go home after you have the block
+	MoveGOTO(bot, HOME_POS);
 }
 
 void goHome(RobotCom* bot, float *x_goal)
 {
-	float xd_[X_DOF] = {0, -0.7, 0, 0.5,0.5,0.5,-0.5};
+	float xd_[X_DOF] = HOME_POS;
 	for(int i=0; i<X_DOF; i++) x_goal[i] = xd_[i];
 	x_goal = xd_;
 	float x_[X_DOF];
@@ -310,6 +344,110 @@ void moveToTop(RobotCom* bot, float *x_goal)
 	cout << "top" << endl;
 }
 
+void recordBlockPos(float* position_array, string name, RobotCom* PumaRobot)
+{
+	PumaRobot->_float();
+    cout << "Floating. Position over " << name << " block." << endl;
+	cout << "Hit 's' to record the position" << endl;
+	char key;
+	while(1)
+	{
+		 cin >> key;
+		 if(key == 's')
+		 break;
+	}
+	
+	PumaRobot->getStatus(GET_IPOS, position_array);
+}
+
+void loadPositionArray(float *pos_arr, ifstream & fin)
+{
+	string line;
+	getline(fin, line);
+	istringstream iss(line);
+
+	for(int i = 0; i < X_DOF; i++)
+		iss >> pos_arr[i];
+
+	for (int i = 0; i < X_DOF; i++) 
+		cout << pos_arr[i] << " " << endl;
+
+}
+
+void writePositionArray(float *pos_arr, ofstream & fout)
+{
+	for(int i = 0; i < X_DOF; i++)
+		fout << pos_arr[i] << " ";
+	fout << endl;
+}
+
+void calibratePositions(RobotCom* PumaRobot)
+{
+	cout << "Recalibrate tetromino pick up locations? (y/n)" << endl;
+	char key;
+	cin >> key;
+
+	// If no recalibration, just read the positions from file
+	if(!(key == 'y' || key == 'Y'))
+	{
+		ifstream infile(BLOCK_POS_FILENAME);
+		if (infile.fail()) 
+		{
+			cout << "error opening file" << endl;
+			for (int i = 0; i < X_DOF; i++)
+				squarePos[i] = HOME_POS[i];
+			return;
+		}
+
+		// These arrays need to be in the same order as the ones
+		// in the recordBlockPos below.
+		loadPositionArray(squarePos, infile);
+		//loadPositionArray(linePos, infile);
+		//loadPositionArray(lPos, infile);
+		//loadPositionArray(reverseLPos, infile);
+		//loadPositionArray(tPos, infile);
+		//loadPositionArray(sPos, infile);
+		//loadPositionArray(zPos, infile);
+
+		infile.close();
+		return;
+	}
+
+	// recalibrate, the order of these needs to be the 
+	// same as the order of the arrays above.
+	recordBlockPos(squarePos, "SQUARE", PumaRobot);
+	/*recordBlockPos(linePos, "LINE", PumaRobot);
+	recordBlockPos(lPos, "L", PumaRobot);
+	recordBlockPos(reverseLPos, "REVERSE L", PumaRobot);
+	recordBlockPos(tPos, "T", PumaRobot);
+	recordBlockPos(sPos, "S", PumaRobot);
+	recordBlockPos(zPos, "Z", PumaRobot);*/
+
+	// record the positions
+	ofstream outfile(BLOCK_POS_FILENAME, ofstream::out | ofstream::trunc);
+	
+	// the order of these needs to be the 
+	// same as the order of the arrays above.
+	writePositionArray(squarePos, outfile);
+	/*writePositionArray(linePos, outfile);
+	writePositionArray(lPos, outfile);
+	writePositionArray(reverseLPos, outfile);
+	writePositionArray(tPos, outfile);
+	writePositionArray(sPos, outfile);
+	writePositionArray(zPos, outfile);*/
+
+	outfile << endl;
+
+	// Make sure you stick to this order!
+	outfile << "The arrays are in the order: " << endl;
+	outfile << "SQUARE, LINE, L, REVERSE L, T" << endl;
+
+	outfile.close();
+
+	cout << "Calibration finished. Enter any key to goHome." << endl;
+	cin >> key;
+}
+
 //int _tmain(int argc, _TCHAR* argv[])
 int main(int argc, char **argv)
 {
@@ -329,11 +467,16 @@ int main(int argc, char **argv)
         }
 	RobotCom* PumaRobot = new RobotCom();
 	waitForStart(PumaRobot);
+
+	calibratePositions(PumaRobot);
+
 	goHome(PumaRobot, x_goal);
 	cout << "home!" << endl;
-	//cin << "press any key to continue";
+	char key;
+	cout << "press any key to continue";
+	cin >> key;
 
-	//moveToTop(PumaRobot, x_goal);
+	pickUpBlock(PumaRobot, squarePos);
 	
 	// initialize game board variables
 	int curr_x = NUM_SQUARES_WIDE/2; int curr_y = NUM_SQUARES_WIDE/2;
@@ -361,6 +504,26 @@ int main(int argc, char **argv)
               cout.flush();
               x_goal[Y] = y;
             }
+			if(s.substr(0,5) == "PICK ") {
+			  string block_type = s.substr(6);
+			  if(block_type == "O")
+				  pickUpBlock(PumaRobot, squarePos); 
+			  else if(block_type == "I")
+				  pickUpBlock(PumaRobot, linePos); 
+			  else if (block_type == "J")
+				  pickUpBlock(PumaRobot, reverseLPos);
+			  else if (block_type == "L")
+				  pickUpBlock(PumaRobot, lPos); 
+			  else if (block_type == "T")
+				  pickUpBlock(PumaRobot, tPos);
+			  else if (block_type == "S")
+				  pickUpBlock(PumaRobot, sPos);
+			  else if (block_type == "Z")
+				  pickUpBlock(PumaRobot, zPos);
+			  else
+				  pickUpBlock(PumaRobot, squarePos); 
+			  }
+			}
             if(s=="PLACE") {
                 //placeBlock();
                 x_goal[Y]=-0.8;

@@ -179,6 +179,9 @@ def puma_moveto(x, y, r):
 def puma_place():
     puma_cmd("PLACE\n")
 
+def puma_pick(block):
+    puma_cmd("PICK %s\n" % block)
+
 
 def main():
     global FPSCLOCK, DISPLAYSURF, BASICFONT, BIGFONT
@@ -243,7 +246,7 @@ def runGame():
                 # No falling piece in play, so start a new piece at the top
             fallingPiece = nextPiece
             nextPiece = getNewPiece()
-            print "PUMA: pick up new piece %s\n" % nextPiece
+            puma_pick(nextPiece.shape)
             lastFallTime = time.time() # reset lastFallTime
 
             if not isValidPosition(board, fallingPiece):
