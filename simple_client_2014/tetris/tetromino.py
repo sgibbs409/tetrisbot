@@ -50,9 +50,9 @@ S_SHAPE_TEMPLATE = [['.....',
                      '.OO..',
                      '.....'],
                     ['.....',
+                     '.O...',
+                     '.OO..',
                      '..O..',
-                     '..OO.',
-                     '...O.',
                      '.....']]
 
 Z_SHAPE_TEMPLATE = [['.....',
@@ -154,25 +154,33 @@ PIECES = {'S': S_SHAPE_TEMPLATE,
           'O': O_SHAPE_TEMPLATE,
           'T': T_SHAPE_TEMPLATE}
 
+LAST_STATE = (-1,-1,0)
+
+def puma_wait_for_ok():
+    data = sock.recv(4) 
+    print 'Received response "%s"\n'%data
+    sys.stdout.flush()
+    
 # Send message and wait for "OK\r\n"
 def puma_cmd(cmd):
-    print cmd
+    print "Sending command " + cmd
     sys.stdout.flush()
     sock.send(cmd)
-    data = sock.recv(4) 
-    print '"%s"\n'%data
-    sys.stdout.flush()
+    puma_wait_for_ok()
+
+
 
 def puma_moveto(x, y, r):
-    puma_cmd("SCL %s %s %s\n" % (x,y,r))
+    global LAST_STATE
+    if LAST_STATE==(x,y,r): return
+    LAST_STATE = (x,y,r)
+    puma_cmd("SCL %s %s %s\n" % (x+2,y+2,r))
 
 def puma_place():
     puma_cmd("PLACE\n")
 
 
 def main():
-    print "\n\n"
-    sys.stdout.flush()
     global FPSCLOCK, DISPLAYSURF, BASICFONT, BIGFONT
     global sock
     pygame.init()
@@ -190,9 +198,8 @@ def main():
     s.bind((host,port)) 
     s.listen(backlog) 
 
-    showTextScreen('Tetromino')
-
     sock, address = s.accept() 
+    showTextScreen('TetrominoBot')
 
     while True: # game loop
         if random.randint(0, 1) == 0:
@@ -325,7 +332,7 @@ def runGame():
             # see if the piece has landed
             if not isValidPosition(board, fallingPiece, adjY=1):
                 # falling piece has landed, set it on the board
-                print "PUMA: Deposit piece on board at (%s, %s) %s\n" % (fallingPiece['x'],fallingPiece['y'],fallingPiece['rotation'])
+                puma_moveto(fallingPiece['x'],fallingPiece['y'],fallingPiece['rotation'])
                 puma_place()
                 addToBoard(board, fallingPiece)
                 score += removeCompleteLines(board)
@@ -337,7 +344,6 @@ def runGame():
                 lastFallTime = time.time()
 
         if fallingPiece is not None:
-            print "PUMA: Target position and orientation is (%s,%s) %s\n" % (fallingPiece['x'],fallingPiece['y'],fallingPiece['rotation'])
             puma_moveto(fallingPiece['x'],fallingPiece['y'],fallingPiece['rotation'])
 
         # drawing everything on the screen
@@ -396,9 +402,6 @@ def showTextScreen(text):
         pygame.display.update()
         FPSCLOCK.tick()
 
-    print "s\n"
-    sys.stdout.flush()
-
 
 def checkForQuit():
     for event in pygame.event.get(QUIT): # get all the QUIT events
@@ -412,7 +415,7 @@ def checkForQuit():
 def calculateLevelAndFallFreq(score):
     # Based on the score, return the level the player is on and
     # how many seconds pass until a falling piece falls one space.
-    FALL_DELAY = 0.3 # to let the robot catch up
+    FALL_DELAY = 0.3
     level = int(score / 10) + 1
     fallFreq = 0.27 - (level * 0.02) + FALL_DELAY
     return level, fallFreq
