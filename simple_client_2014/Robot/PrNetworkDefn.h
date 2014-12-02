@@ -52,9 +52,9 @@
 
 //#define SERV_HOST_ADDR "171.64.68.17" // mann.stanford.edu
 
-//#define SERV_HOST_ADDR "172.24.68.108" // perse.stanford.edu
+#define SERV_HOST_ADDR "172.24.68.108" // perse.stanford.edu
 
-#define SERV_HOST_ADDR "192.168.2.4" // garuda.stanford.edu
+//#define SERV_HOST_ADDR "192.168.2.4" // garuda.stanford.edu
 
 #define SERV_TCP_PORT 8189 
 
