@@ -57,6 +57,29 @@ float orientations[4][4] = {
     {0, 0, 0.71, -0.71}
 };
 
+float default_gains[12] = { 400, 400, 400, 400, 400, 400, 40, 40, 40, 40, 40, 40 };
+float high_gains_last_joint[12] = { 400, 400, 400, 400, 400, 4000, 40, 40, 40, 40, 40, 80 };
+float low_gains[12] = { 100, 100, 100, 100, 100, 100, 10, 10, 10, 10, 10, 10 };
+float high_gains[12] = { 1000, 1000, 1000, 1000, 1000, 1000, 100, 100, 100, 100, 100, 100 };
+
+float kp[20], kv[20];
+
+void getGains(RobotCom* PumaRobot) {
+
+        //PumaRobot->_float();
+
+        PumaRobot->getStatus(GET_KP, kp);
+        cout << "Starting KP:";
+        for(int i=0; i<12; i++) cout << " " << kp[i]; cout << endl;
+
+        PumaRobot->getStatus(GET_KV, kv);
+        cout << "Starting KV:";
+        for(int i=0; i<12; i++) cout << " " << kv[i]; cout << endl;
+
+}
+
+
+
 void moveTo(float *x_goal, int target_x, int target_y, int &curr_x, int &curr_y, int rotation)
 {
   //curr_y = max(0, min(NUM_SQUARES_HIGH, target_y));
@@ -76,8 +99,15 @@ void moveTo(float *x_goal, int target_x, int target_y, int &curr_x, int &curr_y,
 
 void waitForStart(RobotCom *PumaRobot)
 {
+    PumaRobot->setGains(FLOATMODE, default_gains);
+    getGains(PumaRobot);
 	PumaRobot->_float();
+    PumaRobot->setGains(FLOATMODE, default_gains);
     cout << "Float..." << endl;
+        PumaRobot->setGains(FLOATMODE, default_gains);
+        PumaRobot->setGains(GOTO, default_gains);
+        PumaRobot->setGains(NO_CONTROL, default_gains);
+        getGains(PumaRobot);
 	cout << "Disengage E-stop and hit 's'" << endl;
 	char key;
 	while(1)
@@ -252,11 +282,16 @@ void AimEndEffector(RobotCom* PumaRobot)
 */
 
 // Move to joint position via jgoto
-void MoveJGOTO(RobotCom *Robot, float *qd, float *q, float *dq)
+void MoveJGOTO(RobotCom *Robot, float *qd, float *q, float *dq, float *gains)
 {
     cout << "Start JGOTO" << endl;
+    Robot->setGains(JGOTO, gains);
+    Robot->setGains(GOTO, gains);
+    Robot->setGains(FLOATMODE, gains);
+    Robot->setGains(NO_CONTROL, gains);
 	 // Output the joint command
 	 Robot->jointControl(JGOTO, qd[0], qd[1], qd[2], qd[3], qd[4], qd[5]);
+         //getGains(Robot);
 	 
 	 // Wait for the robot to finish motion
      do
@@ -267,11 +302,17 @@ void MoveJGOTO(RobotCom *Robot, float *qd, float *q, float *dq)
     cout << "Complete JGOTO" << endl;
 }
 
-void MoveGOTO(RobotCom *Robot, float *xd, float *x)
+void MoveGOTO(RobotCom *Robot, float *xd, float *x, float *gains)
 {
     cout << "Start GOTO" << endl;
+    Robot->setGains(JGOTO, gains);
+    Robot->setGains(GOTO, gains);
+    Robot->setGains(FLOATMODE, gains);
+    Robot->setGains(NO_CONTROL, gains);
+    getGains(Robot);
 	 // Output the joint command
 	 Robot->control(GOTO, xd, 7);
+         //getGains(Robot);
 	 
 	 // Wait for the robot to finish motion
      do
@@ -296,8 +337,8 @@ void goHome(RobotCom* bot, float *x_goal)
 	float qd_[J_DOF] = {-90,-45,180,0,-45,0}; // in degrees
 	float dq_[J_DOF], q_[J_DOF]; 
 	  
-	MoveJGOTO(bot, qd_, q_, dq_);
-	MoveGOTO(bot, xd_, x_);
+	MoveJGOTO(bot, qd_, q_, dq_, default_gains);
+	MoveGOTO(bot, xd_, x_, default_gains);
 }
 
 void moveToTop(RobotCom* bot, float *x_goal)
@@ -306,10 +347,9 @@ void moveToTop(RobotCom* bot, float *x_goal)
 	for(int i=0; i<X_DOF; i++) x_goal[i] = xd_[i];
 	float x_[X_DOF];
 	
-	MoveGOTO(bot, xd_, x_);
+	MoveGOTO(bot, xd_, x_, default_gains);
 	cout << "top" << endl;
 }
-
 //int _tmain(int argc, _TCHAR* argv[])
 int main(int argc, char **argv)
 {
@@ -319,6 +359,7 @@ int main(int argc, char **argv)
 
 	// start up
 	float x_goal[X_DOF];
+        float x_[X_DOF];
 	TetrisCom* TetrisServer = new TetrisCom();
         if(false) {
             string s;
@@ -328,9 +369,14 @@ int main(int argc, char **argv)
             }
         }
 	RobotCom* PumaRobot = new RobotCom();
+
+        getGains(PumaRobot);
 	waitForStart(PumaRobot);
 	goHome(PumaRobot, x_goal);
 	cout << "home!" << endl;
+
+
+
 	//cin << "press any key to continue";
 
 	//moveToTop(PumaRobot, x_goal);
@@ -338,6 +384,34 @@ int main(int argc, char **argv)
 	// initialize game board variables
 	int curr_x = NUM_SQUARES_WIDE/2; int curr_y = NUM_SQUARES_WIDE/2;
 	int rotation=0;
+
+        moveTo(x_goal, 5, 0, curr_x, curr_y, 0);
+        MoveGOTO(PumaRobot, x_goal, x_, default_gains);
+
+        /*moveTo(x_goal, 5, 10, curr_x, curr_y, 0);
+        MoveGOTO(PumaRobot, x_goal, x_, default_gains);
+
+        moveTo(x_goal, 5, 0, curr_x, curr_y, 0);
+        MoveGOTO(PumaRobot, x_goal, x_, low_gains);
+
+        moveTo(x_goal, 5, 10, curr_x, curr_y, 0);
+        MoveGOTO(PumaRobot, x_goal, x_, low_gains);
+
+        moveTo(x_goal, 5, 0, curr_x, curr_y, 0);
+        MoveGOTO(PumaRobot, x_goal, x_, high_gains);
+
+        moveTo(x_goal, 5, 10, curr_x, curr_y, 0);
+        MoveGOTO(PumaRobot, x_goal, x_, high_gains);
+
+        moveTo(x_goal, 5, 0, curr_x, curr_y, 0);
+        MoveGOTO(PumaRobot, x_goal, x_, default_gains);
+
+        moveTo(x_goal, 5, 10, curr_x, curr_y, 0);
+        MoveGOTO(PumaRobot, x_goal, x_, default_gains);*/
+
+
+
+
 
 	while(true) {
           // Handle input from the game
@@ -364,14 +438,18 @@ int main(int argc, char **argv)
             if(s=="PLACE") {
                 //placeBlock();
                 x_goal[Y]=-0.8;
-                float x_[X_DOF];
-                MoveGOTO(PumaRobot, x_goal, x_);
+                MoveGOTO(PumaRobot, x_goal, x_, default_gains);
                 TetrisServer->sendOK();
                 x_goal[Y]=-0.7;
+                MoveGOTO(PumaRobot, x_goal, x_, default_gains);
+                TetrisServer->sendOK();
+                moveTo(x_goal, 5, 0, curr_x, curr_y, 0);
+                MoveGOTO(PumaRobot, x_goal, x_, default_gains);
+                TetrisServer->sendOK();
+            } else {
+                MoveGOTO(PumaRobot, x_goal, x_, high_gains_last_joint);
+                TetrisServer->sendOK();
             }
-	    float x_[X_DOF];
-	    MoveGOTO(PumaRobot, x_goal, x_);
-            TetrisServer->sendOK();
           }
         }
 
