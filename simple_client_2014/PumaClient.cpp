@@ -6,7 +6,7 @@
 #include "TetrisCom.h"
 #include <iostream>
 //#include <omp.h>
-#include "Magnet.h"
+//#include "Magnet.h"
 //#include <tchar.h>
 
 //#include "PrVector.h"
@@ -51,10 +51,10 @@ enum Position {
 };
 
 float orientations[4][4] = {
-    {0.71, 0, 0.71, 0},
-    {0.5, 0.5, 0.5, 0.5},
-    {0, 0.71, 0, 0.71},
-    {0.5, -0.5, 0.5, -0.5}
+    {0.5, 0.5, 0.5, -0.5},
+    {0.71, 0.71, 0, 0},
+    {0.5, 0.5, -0.5, 0.5},
+    {0, 0, 0.71, -0.71}
 };
 
 void moveTo(float *x_goal, int target_x, int target_y, int &curr_x, int &curr_y, int rotation)
@@ -369,10 +369,10 @@ int main(int argc, char **argv)
                 TetrisServer->sendOK();
                 x_goal[Y]=-0.7;
             }
+	    float x_[X_DOF];
+	    MoveGOTO(PumaRobot, x_goal, x_);
+            TetrisServer->sendOK();
           }
-		  float x_[X_DOF];
-		  MoveGOTO(PumaRobot, x_goal, x_);
-          TetrisServer->sendOK();
         }
 
         PumaRobot->_float();

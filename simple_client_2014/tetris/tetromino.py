@@ -235,10 +235,10 @@ def runGame():
 	    # let the robot move back to the top safely
 	    #RESET_DELAY = 2
 	    #if time.time() > lastFallTime + RESET_DELAY:
-	    puma_moveto(int(BOARDWIDTH / 2) - int(TEMPLATEWIDTH / 2), 15, 0)
-	    puma_moveto(int(BOARDWIDTH / 2) - int(TEMPLATEWIDTH / 2), 10, 0)
-	    puma_moveto(int(BOARDWIDTH / 2) - int(TEMPLATEWIDTH / 2), 5, 0)
-	    puma_moveto(int(BOARDWIDTH / 2) - int(TEMPLATEWIDTH / 2), -2, 0)
+	    #puma_moveto(int(BOARDWIDTH / 2) - int(TEMPLATEWIDTH / 2), 15, 0)
+	    #puma_moveto(int(BOARDWIDTH / 2) - int(TEMPLATEWIDTH / 2), 10, 0)
+	    #puma_moveto(int(BOARDWIDTH / 2) - int(TEMPLATEWIDTH / 2), 5, 0)
+	    puma_moveto(int(BOARDWIDTH / 2) - int(TEMPLATEWIDTH / 2), 0, 0)
 	    #else:
                 # No falling piece in play, so start a new piece at the top
             fallingPiece = nextPiece
