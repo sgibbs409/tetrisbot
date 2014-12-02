@@ -6,12 +6,9 @@
 #include "TetrisCom.h"
 #include <iostream>
 //#include <omp.h>
-//#include "Magnet.h"
+#include "Magnet.h"
 //#include <tchar.h>
 
-//you will need to change PrNetworkDefn and Robot.cpp based on the 
-//QNX computer you are using
-//Copy cs225a.h from your cs225asim directory
 //#include "PrVector.h"
 //#include "Prvector3.h"
 //#include "PrMatrix.h"
@@ -54,10 +51,11 @@ enum Position {
 };
 
 float orientations[4][4] = {
-    {0.5, 0.5, 0.5, -0.5},
-    {0.5, 0.5, 0.5, -0.5},
-    {0.5, 0.5, 0.5, -0.5},
-    {0.5, 0.5, 0.5, -0.5}};
+    {0.71, 0, 0.71, 0},
+    {0.5, 0.5, 0.5, 0.5},
+    {0, 0.71, 0, 0.71},
+    {0.5, -0.5, 0.5, -0.5}
+};
 
 void moveTo(float *x_goal, int target_x, int target_y, int &curr_x, int &curr_y, int rotation)
 {
@@ -336,16 +334,12 @@ int main(int argc, char **argv)
 	//cin << "press any key to continue";
 
 	//moveToTop(PumaRobot, x_goal);
-
-	// Initialize Camera
-	//VideoCapture cap = initCamera();
 	
 	// initialize game board variables
 	int curr_x = NUM_SQUARES_WIDE/2; int curr_y = NUM_SQUARES_WIDE/2;
 	int rotation=0;
 
 	while(true) {
-	  //if(!UpdateCamera(cap, img)) break;
           // Handle input from the game
           std::string s;
           while(TetrisServer->readLine(s)) {
@@ -376,8 +370,8 @@ int main(int argc, char **argv)
                 x_goal[Y]=-0.7;
             }
           }
-	  float x_[X_DOF];
-	  MoveGOTO(PumaRobot, x_goal, x_);
+		  float x_[X_DOF];
+		  MoveGOTO(PumaRobot, x_goal, x_);
           TetrisServer->sendOK();
         }
 

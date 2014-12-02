@@ -106,12 +106,14 @@
     <ClInclude Include="Robot\PrNetworkDefn.h" />
     <ClInclude Include="Robot\RobotCom.h" />
     <ClInclude Include="Robot\unitMsg.h" />
+    <ClInclude Include="TetrisCom.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="PumaClient.cpp" />
     <ClCompile Include="Robot\magnetControllerAPI.cpp" />
     <ClCompile Include="Robot\RobotCom.cpp" />
     <ClCompile Include="Robot\unitMsg.cpp" />
+    <ClCompile Include="TetrisCom.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
