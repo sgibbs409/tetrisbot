@@ -50,7 +50,8 @@ const int X_DOF = 7; // task space
 const int J_DOF = 6; // Joint space
 
 // home position
-float HOME_POS[X_DOF] = {0, -0.7, 0, 0.5, 0.5, 0.5,-0.5};
+float HOME_XPOS[X_DOF] = {0, -0.65, 0, 0.5, 0.5, 0.5,-0.5};
+float HOME_JPOS[J_DOF] = {-107.6, -57.4, 207, -19.9,-61, 9.8};
 
 // The positions of the tetrominos. Needs calibration.
 float squarePos[X_DOF];
@@ -269,13 +270,26 @@ void MoveGOTO(RobotCom *Robot, float *xd, float *x, float *gains)
 
 void pickUpBlock(RobotCom* bot, float *block_pos, HANDLE & serial)
 {
+	// Set up variables
 	float x_[X_DOF];
+	
 	float pick_up_pos[X_DOF];
 	for(int i = 0; i < X_DOF; i++) pick_up_pos[i] = block_pos[i];
 	pick_up_pos[Z] -= 0.25;
 
+	float prep_pick_pos[J_DOF];
+	for(int i = 0; i < J_DOF; i++) prep_pick_pos[i] = HOME_JPOS[i];
+	prep_pick_pos[0] += 70;
+	prep_pick_pos[4] += 90;
+
+	// Go home first
+	float dq_[J_DOF], q_[J_DOF]; 
+	MoveJGOTO(bot, HOME_JPOS, q_, dq_, default_gains);
+	// Go to prepare for pick up position
+	MoveJGOTO(bot, prep_pick_pos, q_, dq_, default_gains);
+
+	// Pick up block
 	MoveGOTO(bot, block_pos, x_, default_gains);
-	 
 	GentlyMoveGOTO(bot, pick_up_pos, verylow_gains);
 
 	magnetOn(serial);
@@ -283,32 +297,28 @@ void pickUpBlock(RobotCom* bot, float *block_pos, HANDLE & serial)
 
 	GentlyMoveGOTO(bot, block_pos, verylow_gains);
 
+	// Go back to to prepare for pick up position
+	MoveJGOTO(bot, prep_pick_pos, q_, dq_, default_gains);
+
 	//go home after you have the block
-	MoveGOTO(bot, HOME_POS, x_, default_gains);
+	MoveJGOTO(bot, HOME_JPOS, q_, dq_, default_gains);
+	MoveGOTO(bot, HOME_XPOS, x_, default_gains);
 }
 
 void goHome(RobotCom* bot, float *x_goal)
-{
-	float xd_[X_DOF] = {};
-	for (int i = 0; i < X_DOF; i++)
-	{
-		xd_[i] = HOME_POS[i];
-	}
+{	
+	for(int i=0; i<X_DOF; i++) x_goal[i] = HOME_XPOS[i];
 	
-	for(int i=0; i<X_DOF; i++) x_goal[i] = xd_[i];
-	x_goal = xd_;
 	float x_[X_DOF];
-
-	float qd_[J_DOF] = {-90,-45,180,0,-45,0}; // in degrees
 	float dq_[J_DOF], q_[J_DOF]; 
-
-	MoveJGOTO(bot, qd_, q_, dq_, default_gains);
-	MoveGOTO(bot, xd_, x_, default_gains);
+	
+	MoveJGOTO(bot, HOME_JPOS, q_, dq_, default_gains);
+	MoveGOTO(bot, HOME_XPOS, x_, default_gains);
 }
 
 void moveToTop(RobotCom* bot, float *x_goal)
 {
-	float xd_[X_DOF] = {0, -0.7, 0.3, 0.5,0.5,0.5,-0.5};
+	float xd_[X_DOF] = {0, -0.65, 0.3, 0.5,0.5,0.5,-0.5};
 	for(int i=0; i<X_DOF; i++) x_goal[i] = xd_[i];
 	float x_[X_DOF];
 
@@ -367,19 +377,19 @@ void calibratePositions(RobotCom* PumaRobot)
 		{
 			cout << "error opening file" << endl;
 			for (int i = 0; i < X_DOF; i++)
-				squarePos[i] = HOME_POS[i];
+				squarePos[i] = HOME_XPOS[i];
 			return;
 		}
 
 		// These arrays need to be in the same order as the ones
 		// in the recordBlockPos below.
 		loadPositionArray(squarePos, infile);
-		//loadPositionArray(linePos, infile);
-		//loadPositionArray(lPos, infile);
-		//loadPositionArray(reverseLPos, infile);
-		//loadPositionArray(tPos, infile);
-		//loadPositionArray(sPos, infile);
-		//loadPositionArray(zPos, infile);
+		loadPositionArray(linePos, infile);
+		loadPositionArray(lPos, infile);
+		loadPositionArray(reverseLPos, infile);
+		loadPositionArray(tPos, infile);
+		loadPositionArray(sPos, infile);
+		loadPositionArray(zPos, infile);
 
 		infile.close();
 		return;
@@ -388,12 +398,12 @@ void calibratePositions(RobotCom* PumaRobot)
 	// recalibrate, the order of these needs to be the 
 	// same as the order of the arrays above.
 	recordBlockPos(squarePos, "SQUARE", PumaRobot);
-	/*recordBlockPos(linePos, "LINE", PumaRobot);
+	recordBlockPos(linePos, "LINE", PumaRobot);
 	recordBlockPos(lPos, "L", PumaRobot);
 	recordBlockPos(reverseLPos, "REVERSE L", PumaRobot);
 	recordBlockPos(tPos, "T", PumaRobot);
 	recordBlockPos(sPos, "S", PumaRobot);
-	recordBlockPos(zPos, "Z", PumaRobot);*/
+	recordBlockPos(zPos, "Z", PumaRobot);
 
 	// record the positions
 	ofstream outfile(BLOCK_POS_FILENAME, ofstream::out | ofstream::trunc);
@@ -401,12 +411,12 @@ void calibratePositions(RobotCom* PumaRobot)
 	// the order of these needs to be the 
 	// same as the order of the arrays above.
 	writePositionArray(squarePos, outfile);
-	/*writePositionArray(linePos, outfile);
+	writePositionArray(linePos, outfile);
 	writePositionArray(lPos, outfile);
 	writePositionArray(reverseLPos, outfile);
 	writePositionArray(tPos, outfile);
 	writePositionArray(sPos, outfile);
-	writePositionArray(zPos, outfile);*/
+	writePositionArray(zPos, outfile);
 
 	outfile << endl;
 
@@ -428,6 +438,7 @@ int main(int argc, char **argv)
 	float x_goal[X_DOF];
 	float x_[X_DOF];
 	TetrisCom* TetrisServer = new TetrisCom();
+
 	RobotCom* PumaRobot = new RobotCom();
 
 	getGains(PumaRobot);
@@ -441,11 +452,6 @@ int main(int argc, char **argv)
 	char key;
 	cout << "press any key to continue";
 	cin >> key;
-
-	/// testing pickup
-	//pickUpBlock(PumaRobot, squarePos, serial); 
-	//return 0;
-
 
 	// initialize game board variables
 	int curr_x = NUM_SQUARES_WIDE/2; int curr_y = NUM_SQUARES_WIDE/2;
@@ -474,6 +480,7 @@ int main(int argc, char **argv)
 			}
 			if(s.substr(0,5) == "PICK ") {
 				string block_type = s.substr(6);
+				cout << "picking up " << block_type << endl;
 				if(block_type == "O")
 					pickUpBlock(PumaRobot, squarePos, serial); 
 				else if(block_type == "I")
@@ -493,11 +500,11 @@ int main(int argc, char **argv)
 			}
 			if(s=="PLACE") {
 				x_goal[Y]=-0.8;
-				GentlyMoveGOTO(PumaRobot, x_goal, verylow_gains);
+				GentlyMoveGOTO(PumaRobot, x_goal, low_gains);
 				magnetOff(serial);
 				_sleep(1000); 
-				x_goal[Y]=-0.7;
-				MoveGOTO(PumaRobot, x_goal, x_, default_gains);
+				x_goal[Y]=-0.65;
+				MoveGOTO(PumaRobot, x_goal, x_, low_gains);
 				moveTo(x_goal, 5, 0, curr_x, curr_y, 0);
 				MoveGOTO(PumaRobot, x_goal, x_, default_gains);
 			} else {
