@@ -192,6 +192,35 @@ void RobotCom::control( ControlMode mode, float *arg, int numArgs )
     sendMessage(mOut);
 }
 
+void RobotCom::setGains( ControlMode mode, float * arg) {
+
+    if( mode != GOTO && mode != FLOATMODE && mode != NO_CONTROL && mode != JGOTO)
+      return;
+
+    {
+        CMsg mOut;
+        mOut.Init();
+        mOut.WriteMessageType(SET_CONSTANT);
+        mOut.WriteInt(SET_KP);
+        mOut.WriteInt(mode);
+        mOut.WriteFloat(arg, 6);
+        sendMessage(mOut);
+    }
+
+    {
+        CMsg mOut;
+        mOut.Init();
+        mOut.WriteMessageType(SET_CONSTANT);
+        mOut.WriteInt(SET_KV);
+        mOut.WriteInt(mode);
+        mOut.WriteFloat(arg+6, 6);
+        sendMessage(mOut);
+    }
+
+
+
+}
+
 void RobotCom::jointControl( ControlMode mode, float q0, float q1, float q2, float q3, float q4, float q5)
 {
 	if( mode != NJMOVE && mode != JMOVE
@@ -237,12 +266,12 @@ void RobotCom::_break() {
 
 // get_type = GET_CURTIME (gv.curTime),
 //            GET_JPOS (gv.q), GET_JVEL (gv.dq), GET_TORQ (gv.tau), 
-//            GET_IPOS (gv.x)
+//            GET_IPOS (gv.x), GET_KP, GET_KV
 void RobotCom::getStatus( UiToServoMessageType get_type, float *arg )
 {
 	if( get_type != GET_CURTIME && get_type != GET_JPOS
 		&& get_type != GET_JVEL && get_type != GET_TORQ
-		&& get_type != GET_IPOS )
+		&& get_type != GET_IPOS && get_type != GET_KP && get_type != GET_KV )
 		return;
 
     CMsg mOut;
@@ -272,6 +301,11 @@ void RobotCom::getStatus( UiToServoMessageType get_type, float *arg )
 		expectedMesgType = TORQ_DATA;
 		numOfData = 6;
 		break;
+	case GET_KP:
+        case GET_KV:
+		expectedMesgType = GAIN_DATA;
+		numOfData = 12;
+		break;
 	case GET_IPOS:
 		expectedMesgType = IPOS_DATA;
 		numOfData = 7;
@@ -286,11 +320,23 @@ void RobotCom::getStatus( UiToServoMessageType get_type, float *arg )
 			short mesgType = mIn.ReadMessageType();
 			//printf("Type = %d\n", mesgType );
 
+                        if(mesgType == GAIN_DATA) {
+                                int mode, size;
+                                mIn.ReadInt(&mode, 1);
+                                mIn.ReadInt(&size, 1);
+                                cout << "Reading gains, mode is " << mode << " and size is " << size << " (presumably 6)" << endl;
+                        }
+
 			if( mesgType == expectedMesgType )
 			{
 				mIn.ReadFloat( arg, numOfData );
 				return;
-			}
+			} else if ( mesgType == GAIN_DATA) {
+                                float gains[12];
+                                mIn.ReadFloat( gains, 12 );
+                                cout << "Current gains:";
+                                for(int i=0; i<12; i++) cout << " " << gains[i]; cout << endl;
+                        }
 		}
 	}
 }

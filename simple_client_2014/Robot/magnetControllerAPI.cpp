@@ -65,7 +65,7 @@ HANDLE magnetInit(char* portName)
 		CloseHandle(hSerial);
 	 }
 
-	
+	if (!result) cout << "Error initializing serial communication\n";
 
 	 return hSerial;
 }

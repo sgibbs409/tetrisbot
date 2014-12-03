@@ -22,8 +22,10 @@ public:
 
 	// get_type = GET_CURTIME (gv.curTime),
 	//            GET_JPOS (gv.q), GET_JVEL (gv.dq), GET_TORQ (gv.tau), 
-	//            GET_IPOS (gv.x)
+	//            GET_IPOS (gv.x), GET_KP, GET_KV
 	void getStatus( UiToServoMessageType get_type, float *arg );
+
+        void setGains( ControlMode mode,float* arg);
 
 
 	// voltage = -10.0 ~ + 10.0
