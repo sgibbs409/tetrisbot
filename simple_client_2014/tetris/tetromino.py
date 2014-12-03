@@ -246,7 +246,7 @@ def runGame():
                 # No falling piece in play, so start a new piece at the top
             fallingPiece = nextPiece
             nextPiece = getNewPiece()
-            puma_pick(nextPiece.shape)
+            puma_pick(nextPiece['shape'])
             lastFallTime = time.time() # reset lastFallTime
 
             if not isValidPosition(board, fallingPiece):
