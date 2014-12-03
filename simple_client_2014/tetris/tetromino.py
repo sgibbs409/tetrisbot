@@ -157,8 +157,8 @@ PIECES = {'S': S_SHAPE_TEMPLATE,
 LAST_STATE = (-1,-1,0)
 
 def puma_wait_for_ok():
-    data = sock.recv(4) 
-    print 'Received response "%s"\n'%data
+    while sock.recv(1) != 'K': pass
+    print 'Received OK\n'
     sys.stdout.flush()
     
 # Send message and wait for "OK\r\n"
