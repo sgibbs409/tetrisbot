@@ -82,6 +82,7 @@ float orientations[4][4] = {
 float default_gains[12] = { 400, 400, 400, 400, 400, 400, 40, 40, 40, 40, 40, 40 };
 float high_gains_last_joint[12] = { 400, 400, 400, 400, 400, 4000, 40, 40, 40, 40, 40, 80 };
 float low_gains[12] = { 100, 100, 100, 100, 100, 100, 10, 10, 10, 10, 10, 10 };
+float testlow_gains[12] = { 100, 100, 100, 100, 100, 100, 40, 40, 40, 40, 40, 40 };
 float verylow_gains[12] = { 40, 40, 40, 40, 40, 40, 10, 10, 10, 10, 10, 10 };
 float high_gains[12] = { 1000, 1000, 1000, 1000, 1000, 1000, 100, 100, 100, 100, 100, 100 };
 
@@ -237,14 +238,13 @@ void GentlyMoveGOTO(RobotCom *Robot, float *xd, float *gains) {
 	// Output the joint command
 	Robot->control(GOTO, xd, 7);
 
-        // Wait for the robot to stop
+    // Wait for the robot to stop
 	float dq[6];
 	do
 	{
 		Robot->getStatus(GET_JVEL,dq);
 	}while(!jposStopped(dq));
 	cout << "Complete gentle GOTO" << endl;
-
 }
 
 void MoveGOTO(RobotCom *Robot, float *xd, float *x, float *gains)
@@ -257,7 +257,7 @@ void MoveGOTO(RobotCom *Robot, float *xd, float *x, float *gains)
 	getGains(Robot);
 	// Output the joint command
 	Robot->control(GOTO, xd, 7);
-	//getGains(Robot);
+	getGains(Robot);
 
 	// Wait for the robot to finish motion
 	do
@@ -272,13 +272,14 @@ void pickUpBlock(RobotCom* bot, float *block_pos, HANDLE & serial)
 	float x_[X_DOF];
 	float pick_up_pos[X_DOF];
 	for(int i = 0; i < X_DOF; i++) pick_up_pos[i] = block_pos[i];
-	pick_up_pos[Z] += 0.05;
+	pick_up_pos[Z] -= 0.25;
 
 	MoveGOTO(bot, block_pos, x_, default_gains);
 	 
 	GentlyMoveGOTO(bot, pick_up_pos, verylow_gains);
 
 	magnetOn(serial);
+	cout << "magnet On" << endl;
 
 	GentlyMoveGOTO(bot, block_pos, verylow_gains);
 
@@ -301,8 +302,8 @@ void goHome(RobotCom* bot, float *x_goal)
 	float qd_[J_DOF] = {-90,-45,180,0,-45,0}; // in degrees
 	float dq_[J_DOF], q_[J_DOF]; 
 
-	//MoveJGOTO(bot, qd_, q_, dq_, default_gains);
-	//MoveGOTO(bot, xd_, x_, default_gains);
+	MoveJGOTO(bot, qd_, q_, dq_, default_gains);
+	MoveGOTO(bot, xd_, x_, default_gains);
 }
 
 void moveToTop(RobotCom* bot, float *x_goal)
@@ -427,13 +428,6 @@ int main(int argc, char **argv)
 	float x_goal[X_DOF];
 	float x_[X_DOF];
 	TetrisCom* TetrisServer = new TetrisCom();
-	if(false) {
-		string s;
-		while(TetrisServer->readLine(s)) {
-			cout << "<<" << s << ">>" << endl;
-			TetrisServer->sendOK();
-		}
-	}
 	RobotCom* PumaRobot = new RobotCom();
 
 	getGains(PumaRobot);
@@ -449,8 +443,8 @@ int main(int argc, char **argv)
 	cin >> key;
 
 	/// testing pickup
-	pickUpBlock(PumaRobot, squarePos, serial); 
-	return 0;
+	//pickUpBlock(PumaRobot, squarePos, serial); 
+	//return 0;
 
 
 	// initialize game board variables
