@@ -95,20 +95,17 @@ void getGains(RobotCom* PumaRobot) {
 }
 
 
-
 void moveTo(float *x_goal, int target_x, int target_y, int &curr_x, int &curr_y, int rotation)
 {
-	//curr_y = max(0, min(NUM_SQUARES_HIGH, target_y));
-	//curr_x = max(0, min(NUM_SQUARES_WIDE, target_x));
-	curr_y = target_y;
-	curr_x = target_x;
+	curr_y = max(0, min(NUM_SQUARES_HIGH, target_y));
+	curr_x = max(0, min(NUM_SQUARES_WIDE, target_x));
+	//curr_y = target_y;
+	//curr_x = target_x;
 
 	x_goal[X] = SQUARE_SIZE*(curr_x-NUM_SQUARES_WIDE/2);
 	x_goal[Z] = -SQUARE_SIZE*(curr_y-NUM_SQUARES_HIGH/2);
 	assert(rotation>=0 && rotation<4);
 	for(int i=0; i<4; i++) x_goal[3+i] = orientations[rotation][i];
-
-	// x_goal[GAMMA] = (rotation * 90) % 360;
 
 	cout << "currx: " << curr_x << "  curr_y: " << curr_y << " curr_rotation:  " << rotation << endl;
 }
@@ -494,7 +491,6 @@ void calibratePositions(RobotCom* PumaRobot)
 	cin >> key;
 }
 
-//int _tmain(int argc, _TCHAR* argv[])
 int main(int argc, char **argv)
 {
 	HANDLE serial = magnetInit("COM14");

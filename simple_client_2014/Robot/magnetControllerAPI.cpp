@@ -6,9 +6,9 @@
 #include <Windows.h>
 #include "Magnet.h"
 
-
 #include <iostream>
 #include <tchar.h>
+#include <string>
 using namespace std;
 
 
@@ -19,11 +19,13 @@ using namespace std;
 
 HANDLE magnetInit(char* portName)
 {
-	//Open USB port COM3
 	bool result = false;
 	HANDLE hSerial;
- 
-	hSerial = CreateFile(portName, GENERIC_READ | GENERIC_WRITE, 0, 0,OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+    
+	// needed if the COM port > 9
+	string tmpPortName = string("\\\\.\\") + string(portName);
+
+	hSerial = CreateFile(tmpPortName.c_str(), GENERIC_READ | GENERIC_WRITE, 0, 0,OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
 	if(hSerial == INVALID_HANDLE_VALUE)
 	{
 		result = false;
