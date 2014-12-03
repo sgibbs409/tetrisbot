@@ -569,17 +569,14 @@ int main(int argc, char **argv)
 			//placeBlock();
 			x_goal[Y]=-0.8;
 			MoveGOTO(PumaRobot, x_goal, x_, default_gains);
-			TetrisServer->sendOK();
 			x_goal[Y]=-0.7;
 			MoveGOTO(PumaRobot, x_goal, x_, default_gains);
-			TetrisServer->sendOK();
 			moveTo(x_goal, 5, 0, curr_x, curr_y, 0);
 			MoveGOTO(PumaRobot, x_goal, x_, default_gains);
-			TetrisServer->sendOK();
 			} else {
 				MoveGOTO(PumaRobot, x_goal, x_, high_gains_last_joint);
-				TetrisServer->sendOK();
 			}
+			TetrisServer->sendOK();
 		}
 	}
 
