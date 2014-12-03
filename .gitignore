@@ -9,4 +9,5 @@ tetrisbot
 *.vcxproj
 *.ipch
 *.pdb
+*.idb
 *.mid
