@@ -320,23 +320,18 @@ void RobotCom::getStatus( UiToServoMessageType get_type, float *arg )
 			short mesgType = mIn.ReadMessageType();
 			//printf("Type = %d\n", mesgType );
 
-                        if(mesgType == GAIN_DATA) {
+                       /* if(mesgType == GAIN_DATA) {
                                 int mode, size;
                                 mIn.ReadInt(&mode, 1);
                                 mIn.ReadInt(&size, 1);
                                 cout << "Reading gains, mode is " << mode << " and size is " << size << " (presumably 6)" << endl;
-                        }
+                        }*/
 
 			if( mesgType == expectedMesgType )
 			{
 				mIn.ReadFloat( arg, numOfData );
 				return;
-			} else if ( mesgType == GAIN_DATA) {
-                                float gains[12];
-                                mIn.ReadFloat( gains, 12 );
-                                cout << "Current gains:";
-                                for(int i=0; i<12; i++) cout << " " << gains[i]; cout << endl;
-                        }
+			}
 		}
 	}
 }

@@ -268,6 +268,18 @@ void MoveGOTO(RobotCom *Robot, float *xd, float *x, float *gains)
 	cout << "Complete GOTO" << endl;
 }
 
+void prepPickUp(RobotCom* bot, HANDLE & serial)
+{
+	float prep_pick_pos[J_DOF];
+	for(int i = 0; i < J_DOF; i++) prep_pick_pos[i] = HOME_JPOS[i];
+	prep_pick_pos[0] += 70;
+	prep_pick_pos[4] += 90;
+
+	float dq_[J_DOF], q_[J_DOF]; 
+
+	MoveJGOTO(bot, prep_pick_pos, q_, dq_, default_gains);
+}
+
 void pickUpBlock(RobotCom* bot, float *block_pos, HANDLE & serial)
 {
 	// Set up variables
@@ -277,16 +289,11 @@ void pickUpBlock(RobotCom* bot, float *block_pos, HANDLE & serial)
 	for(int i = 0; i < X_DOF; i++) pick_up_pos[i] = block_pos[i];
 	pick_up_pos[Z] -= 0.25;
 
-	float prep_pick_pos[J_DOF];
-	for(int i = 0; i < J_DOF; i++) prep_pick_pos[i] = HOME_JPOS[i];
-	prep_pick_pos[0] += 70;
-	prep_pick_pos[4] += 90;
-
 	// Go home first
 	float dq_[J_DOF], q_[J_DOF]; 
 	MoveJGOTO(bot, HOME_JPOS, q_, dq_, default_gains);
 	// Go to prepare for pick up position
-	MoveJGOTO(bot, prep_pick_pos, q_, dq_, default_gains);
+	prepPickUp(bot, serial);
 
 	// Pick up block
 	MoveGOTO(bot, block_pos, x_, default_gains);
@@ -298,7 +305,7 @@ void pickUpBlock(RobotCom* bot, float *block_pos, HANDLE & serial)
 	GentlyMoveGOTO(bot, block_pos, verylow_gains);
 
 	// Go back to to prepare for pick up position
-	MoveJGOTO(bot, prep_pick_pos, q_, dq_, default_gains);
+	prepPickUp(bot, serial);
 
 	//go home after you have the block
 	MoveJGOTO(bot, HOME_JPOS, q_, dq_, default_gains);
@@ -363,7 +370,7 @@ void writePositionArray(float *pos_arr, ofstream & fout)
 	fout << endl;
 }
 
-void calibratePositions(RobotCom* PumaRobot)
+void calibratePositions(RobotCom* PumaRobot, HANDLE & serial)
 {
 	cout << "Recalibrate tetromino pick up locations? (y/n)" << endl;
 	char key;
@@ -394,6 +401,8 @@ void calibratePositions(RobotCom* PumaRobot)
 		infile.close();
 		return;
 	}
+
+	prepPickUp(PumaRobot, serial);
 
 	// recalibrate, the order of these needs to be the 
 	// same as the order of the arrays above.
@@ -444,7 +453,7 @@ int main(int argc, char **argv)
 	getGains(PumaRobot);
 	waitForStart(PumaRobot);
 
-	calibratePositions(PumaRobot);
+	calibratePositions(PumaRobot, serial);
 
 	goHome(PumaRobot, x_goal);
 	cout << "home!" << endl;
@@ -479,8 +488,7 @@ int main(int argc, char **argv)
 				x_goal[Y] = y;
 			}
 			if(s.substr(0,5) == "PICK ") {
-				string block_type = s.substr(6);
-				cout << "picking up " << block_type << endl;
+				string block_type = s.substr(5);
 				if(block_type == "O")
 					pickUpBlock(PumaRobot, squarePos, serial); 
 				else if(block_type == "I")
