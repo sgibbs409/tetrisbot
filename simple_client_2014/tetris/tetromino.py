@@ -182,6 +182,9 @@ def puma_place():
 def puma_pick(block):
     puma_cmd("PICK %s\n" % block)
 
+def puma_quit():
+    puma_cmd("Q\n");
+
 
 def main():
     global FPSCLOCK, DISPLAYSURF, BASICFONT, BIGFONT
@@ -241,7 +244,7 @@ def runGame():
 	    #puma_moveto(int(BOARDWIDTH / 2) - int(TEMPLATEWIDTH / 2), 15, 0)
 	    #puma_moveto(int(BOARDWIDTH / 2) - int(TEMPLATEWIDTH / 2), 10, 0)
 	    #puma_moveto(int(BOARDWIDTH / 2) - int(TEMPLATEWIDTH / 2), 5, 0)
-	    puma_moveto(int(BOARDWIDTH / 2) - int(TEMPLATEWIDTH / 2), 0, 0)
+	    #puma_moveto(int(BOARDWIDTH / 2) - int(TEMPLATEWIDTH / 2), 0, 0)
 	    #else:
                 # No falling piece in play, so start a new piece at the top
             fallingPiece = nextPiece
@@ -251,6 +254,7 @@ def runGame():
 
             if not isValidPosition(board, fallingPiece):
                 print "PUMA: game over\n"
+                puma_quit();
                 return # can't fit a new piece on the board, so game over
 
         checkForQuit()
@@ -425,8 +429,7 @@ def calculateLevelAndFallFreq(score):
 
 def getNewPiece():
     # return a random new piece in a random rotation and color
-    #shape = random.choice(list(PIECES.keys()))
-    shape = 'L'
+    shape = random.choice(list(PIECES.keys()))
     newPiece = {'shape': shape,
                 'rotation': random.randint(0, len(PIECES[shape]) - 1),
                 'x': int(BOARDWIDTH / 2) - int(TEMPLATEWIDTH / 2),
