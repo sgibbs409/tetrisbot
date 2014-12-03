@@ -6,7 +6,12 @@
 #include "TetrisCom.h"
 #include <iostream>
 //#include <omp.h>
+
+#ifdef WIN32
 #include "Magnet.h"
+#else
+#include "MagnetStub.h"
+#endif
 //#include <tchar.h>
 
 //#include "PrVector.h"
@@ -37,6 +42,7 @@ const string BLOCK_POS_FILENAME = "block_pos.txt";
 
 #define XREACHEDTOL 0.2
 #define QREACHEDTOL 20 // fine tune this parameter
+#define DQREACHEDTOL 20 // fine tune this parameter
 #define REACHEDITER 100 // fine tune this parameter
 
 // number of arguments describing the end-effector
@@ -76,6 +82,7 @@ float orientations[4][4] = {
 float default_gains[12] = { 400, 400, 400, 400, 400, 400, 40, 40, 40, 40, 40, 40 };
 float high_gains_last_joint[12] = { 400, 400, 400, 400, 400, 4000, 40, 40, 40, 40, 40, 80 };
 float low_gains[12] = { 100, 100, 100, 100, 100, 100, 10, 10, 10, 10, 10, 10 };
+float verylow_gains[12] = { 40, 40, 40, 40, 40, 40, 10, 10, 10, 10, 10, 10 };
 float high_gains[12] = { 1000, 1000, 1000, 1000, 1000, 1000, 100, 100, 100, 100, 100, 100 };
 
 float kp[20], kv[20];
@@ -174,6 +181,30 @@ bool jposReached(float *qd, float *q)
 	}
 	return false;
 }
+
+
+bool jposStopped(float *dq)
+{
+	float dqTolerance = 0;
+	static int stoppedCnt = 0;
+	for(int i = 0; i < J_DOF; i ++)
+	{
+		dqTolerance += dq[i]*dq[i];
+	}
+	if(dqTolerance < DQREACHEDTOL)
+		stoppedCnt ++;
+	else
+		stoppedCnt = 0;
+
+	if(stoppedCnt >= REACHEDITER)
+	{
+		stoppedCnt = 0;
+		return true;
+	}
+	return false;
+}
+
+
 
 /*
 // Thresholding constants
@@ -313,6 +344,30 @@ void MoveJGOTO(RobotCom *Robot, float *qd, float *q, float *dq, float *gains)
 		Robot->getStatus(GET_JVEL,dq);
 	}while(!jposReached(qd,q));
 	cout << "Complete JGOTO" << endl;
+}
+
+// Move towards the goal until you are stopped
+void GentlyMoveGOTO(RobotCom *Robot, float *xd, float *gains) {
+	cout << "Start gentle GOTO" << endl;
+
+	// Set gains
+	Robot->setGains(JGOTO, gains);
+	Robot->setGains(GOTO, gains);
+	Robot->setGains(FLOATMODE, gains);
+	Robot->setGains(NO_CONTROL, gains);
+	getGains(Robot);
+
+	// Output the joint command
+	Robot->control(GOTO, xd, 7);
+
+        // Wait for the robot to stop
+	float dq[6];
+	do
+	{
+		Robot->getStatus(GET_JVEL,dq);
+	}while(!jposStopped(dq));
+	cout << "Complete gentle GOTO" << endl;
+
 }
 
 void MoveGOTO(RobotCom *Robot, float *xd, float *x, float *gains)
@@ -494,7 +549,7 @@ void calibratePositions(RobotCom* PumaRobot)
 int main(int argc, char **argv)
 {
 	HANDLE serial = magnetInit("COM14");
-	magnetTest(serial);
+	//magnetTest(serial);
 
 	// start up
 	float x_goal[X_DOF];
@@ -566,15 +621,17 @@ int main(int argc, char **argv)
 					pickUpBlock(PumaRobot, squarePos); 
 			}
 			if(s=="PLACE") {
-			//placeBlock();
-			x_goal[Y]=-0.8;
-			MoveGOTO(PumaRobot, x_goal, x_, default_gains);
-			x_goal[Y]=-0.7;
-			MoveGOTO(PumaRobot, x_goal, x_, default_gains);
-			moveTo(x_goal, 5, 0, curr_x, curr_y, 0);
-			MoveGOTO(PumaRobot, x_goal, x_, default_gains);
+				//placeBlock();
+				x_goal[Y]=-0.8;
+				GentlyMoveGOTO(PumaRobot, x_goal, verylow_gains);
+				//magnetOff(serial);
+				x_goal[Y]=-0.7;
+				MoveGOTO(PumaRobot, x_goal, x_, default_gains);
+				moveTo(x_goal, 5, 0, curr_x, curr_y, 0);
+				MoveGOTO(PumaRobot, x_goal, x_, default_gains);
 			} else {
-				MoveGOTO(PumaRobot, x_goal, x_, high_gains_last_joint);
+				//MoveGOTO(PumaRobot, x_goal, x_, high_gains_last_joint);
+				MoveGOTO(PumaRobot, x_goal, x_, default_gains);
 			}
 			TetrisServer->sendOK();
 		}
