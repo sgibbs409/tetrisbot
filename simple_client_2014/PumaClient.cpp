@@ -50,7 +50,7 @@ const int X_DOF = 7; // task space
 const int J_DOF = 6; // Joint space
 
 // home position
-const float HOME_POS[X_DOF] = {0, -0.7, 0, 0.5, 0.5, 0.5,-0.5};
+float HOME_POS[X_DOF] = {0, -0.7, 0, 0.5, 0.5, 0.5,-0.5};
 
 // The positions of the tetrominos. Needs calibration.
 float squarePos[X_DOF];
@@ -106,8 +106,6 @@ void moveTo(float *x_goal, int target_x, int target_y, int &curr_x, int &curr_y,
 {
 	curr_y = max(0, min(NUM_SQUARES_HIGH, target_y));
 	curr_x = max(0, min(NUM_SQUARES_WIDE, target_x));
-	//curr_y = target_y;
-	//curr_x = target_x;
 
 	x_goal[X] = SQUARE_SIZE*(curr_x-NUM_SQUARES_WIDE/2);
 	x_goal[Z] = -SQUARE_SIZE*(curr_y-NUM_SQUARES_HIGH/2);
@@ -205,127 +203,6 @@ bool jposStopped(float *dq)
 }
 
 
-
-/*
-// Thresholding constants
-int iLowH = 166;
-int iHighH = 178;
-
-int iLowS = 201; 
-int iHighS = 255;
-
-int iLowV = 114;
-int iHighV = 255;
-
-int MAX_X;
-int MAX_Y;
-
-
-VideoCapture initCamera()
-{
-VideoCapture cap(0); //capture the video from web cam
-
-if ( !cap.isOpened() )  // if not success, exit program
-{
-cout << "Cannot open the web cam" << endl;
-return NULL;
-}
-
-cout << "initing" << endl;
-
-Mat tempMat;
-cap.read(tempMat);
-MAX_X = tempMat.cols;
-MAX_Y = tempMat.rows; 
-
-namedWindow("Control", CV_WINDOW_AUTOSIZE); //create a window called "Control"
-
-//Create trackbars in "Control" window
-createTrackbar("LowH", "Control", &iLowH, 360); //Hue (0 - 360)
-createTrackbar("HighH", "Control", &iHighH, 360);
-
-createTrackbar("LowS", "Control", &iLowS, 255); //Saturation (0 - 255)
-createTrackbar("HighS", "Control", &iHighS, 255);
-
-createTrackbar("LowV", "Control", &iLowV, 255);//Value (0 - 255)
-createTrackbar("HighV", "Control", &iHighV, 255);
-
-return cap;
-}
-
-Point GetCentroid(Mat &img)
-{
-Point retval;
-
-//Calculate the moments of the thresholded image
-Moments oMoments = moments(img);
-double dM01 = oMoments.m01;
-double dM10 = oMoments.m10;
-double dArea = oMoments.m00;
-
-// if the area <= 10000, I consider that the there are no object in the image and it's because of the noise, the area is not zero 
-if (dArea > 10000)
-{
-//calculate the position
-retval.x = dM10 / dArea;
-retval.y = dM01 / dArea;        
-
-//Draw a circle on the center point
-circle(img, retval, 3, Scalar(255,255,255), 2);
-
-// draw target, center of the image
-circle(img, Point(MAX_X/2, MAX_Y/2), 3, Scalar(100,100,255),2);
-}
-
-return retval;
-}
-
-bool UpdateCamera(VideoCapture &cap, Mat &img)
-{
-Mat imgOriginal;
-
-bool bSuccess = cap.read(imgOriginal); // read a new frame from video
-
-if (!bSuccess) //if not success, break loop
-{
-cout << "Cannot read a frame from video stream" << endl;
-return false;
-}
-
-Mat imgHSV;
-cvtColor(imgOriginal, imgHSV, COLOR_BGR2HSV); //Convert the captured frame from BGR to HSV
-
-inRange(imgHSV, Scalar(iLowH, iLowS, iLowV), Scalar(iHighH, iHighS, iHighV), img); //Threshold the image
-
-//morphological opening (remove small objects from the foreground)
-erode(img, img, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
-dilate(img, img, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) ); 
-
-//morphological closing (fill small holes in the foreground)
-dilate( img, img, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) ); 
-erode(img, img, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
-
-GetCentroid(img);
-
-imshow("Thresholded Image", img); //show the thresholded image
-imshow("Original", imgOriginal); //show the original image
-
-if (waitKey(30) == 27) //wait for 'esc' key press for 30ms. If 'esc' key is pressed, break loop
-{
-cout << "esc key is pressed by user" << endl;
-}
-
-return true;
-}
-
-// Using a webcam on the end-effector.
-void AimEndEffector(RobotCom* PumaRobot)
-{
-//Point targetPoint = 
-}
-*/
-
-// Move to joint position via jgoto
 void MoveJGOTO(RobotCom *Robot, float *qd, float *q, float *dq, float *gains)
 {
 	cout << "Start JGOTO" << endl;
@@ -390,27 +267,23 @@ void MoveGOTO(RobotCom *Robot, float *xd, float *x, float *gains)
 	cout << "Complete GOTO" << endl;
 }
 
-void pickUpBlock(RobotCom* bot, float *block_pos)
+void pickUpBlock(RobotCom* bot, float *block_pos, HANDLE & serial)
 {
 	float x_[X_DOF];
 	float pick_up_pos[X_DOF];
 	for(int i = 0; i < X_DOF; i++) pick_up_pos[i] = block_pos[i];
 	pick_up_pos[Z] += 0.05;
 
-	//MoveGOTO(bot, block_pos, x_);
+	MoveGOTO(bot, block_pos, x_, default_gains);
+	 
+	GentlyMoveGOTO(bot, pick_up_pos, verylow_gains);
 
-	/* LOWER GAINS HERE */
+	magnetOn(serial);
 
-	//MoveGOTO(bot, pick_up_pos, x_);
-
-	/* TURN ON MAGNETS HERE */
-
-	//MoveGOTO(bot, block_pos, x_);
-
-	/* CHANGE GAINS BACK */
+	GentlyMoveGOTO(bot, block_pos, verylow_gains);
 
 	//go home after you have the block
-	//MoveGOTO(bot, HOME_POS);
+	MoveGOTO(bot, HOME_POS, x_, default_gains);
 }
 
 void goHome(RobotCom* bot, float *x_goal)
@@ -549,7 +422,6 @@ void calibratePositions(RobotCom* PumaRobot)
 int main(int argc, char **argv)
 {
 	HANDLE serial = magnetInit("COM14");
-	//magnetTest(serial);
 
 	// start up
 	float x_goal[X_DOF];
@@ -575,6 +447,11 @@ int main(int argc, char **argv)
 	char key;
 	cout << "press any key to continue";
 	cin >> key;
+
+	/// testing pickup
+	pickUpBlock(PumaRobot, squarePos, serial); 
+	return 0;
+
 
 	// initialize game board variables
 	int curr_x = NUM_SQUARES_WIDE/2; int curr_y = NUM_SQUARES_WIDE/2;
@@ -604,27 +481,27 @@ int main(int argc, char **argv)
 			if(s.substr(0,5) == "PICK ") {
 				string block_type = s.substr(6);
 				if(block_type == "O")
-					pickUpBlock(PumaRobot, squarePos); 
+					pickUpBlock(PumaRobot, squarePos, serial); 
 				else if(block_type == "I")
-					pickUpBlock(PumaRobot, linePos); 
+					pickUpBlock(PumaRobot, linePos, serial); 
 				else if (block_type == "J")
-					pickUpBlock(PumaRobot, reverseLPos);
+					pickUpBlock(PumaRobot, reverseLPos, serial);
 				else if (block_type == "L")
-					pickUpBlock(PumaRobot, lPos); 
+					pickUpBlock(PumaRobot, lPos, serial); 
 				else if (block_type == "T")
-					pickUpBlock(PumaRobot, tPos);
+					pickUpBlock(PumaRobot, tPos, serial);
 				else if (block_type == "S")
-					pickUpBlock(PumaRobot, sPos);
+					pickUpBlock(PumaRobot, sPos, serial);
 				else if (block_type == "Z")
-					pickUpBlock(PumaRobot, zPos);
+					pickUpBlock(PumaRobot, zPos, serial);
 				else
-					pickUpBlock(PumaRobot, squarePos); 
+					pickUpBlock(PumaRobot, squarePos, serial); 
 			}
 			if(s=="PLACE") {
-				//placeBlock();
 				x_goal[Y]=-0.8;
 				GentlyMoveGOTO(PumaRobot, x_goal, verylow_gains);
-				//magnetOff(serial);
+				magnetOff(serial);
+				_sleep(1000); 
 				x_goal[Y]=-0.7;
 				MoveGOTO(PumaRobot, x_goal, x_, default_gains);
 				moveTo(x_goal, 5, 0, curr_x, curr_y, 0);
