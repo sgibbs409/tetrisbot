@@ -41,7 +41,7 @@ const float SQUARE_SIZE = 0.05;
 const string BLOCK_POS_FILENAME = "block_pos.txt";
 
 #define XREACHEDTOL 0.2
-#define QREACHEDTOL 20 // fine tune this parameter
+#define QREACHEDTOL 40 // fine tune this parameter
 #define DQREACHEDTOL 20 // fine tune this parameter
 #define REACHEDITER 100 // fine tune this parameter
 
@@ -204,14 +204,19 @@ bool jposStopped(float *dq)
 	return false;
 }
 
-
-void MoveJGOTO(RobotCom *Robot, float *qd, float *q, float *dq, float *gains)
-{
-	cout << "Start JGOTO" << endl;
+void setGains(RobotCom *Robot, float *gains) {
 	Robot->setGains(JGOTO, gains);
 	Robot->setGains(GOTO, gains);
 	Robot->setGains(FLOATMODE, gains);
 	Robot->setGains(NO_CONTROL, gains);
+	getGains(Robot);
+}
+
+
+void MoveJGOTO(RobotCom *Robot, float *qd, float *q, float *dq, float *gains)
+{
+	cout << "Start JGOTO" << endl;
+        setGains(Robot, gains);
 	// Output the joint command
 	Robot->jointControl(JGOTO, qd[0], qd[1], qd[2], qd[3], qd[4], qd[5]);
 	//getGains(Robot);
@@ -225,40 +230,13 @@ void MoveJGOTO(RobotCom *Robot, float *qd, float *q, float *dq, float *gains)
 	cout << "Complete JGOTO" << endl;
 }
 
-// Move towards the goal until you are stopped
-void GentlyMoveGOTO(RobotCom *Robot, float *xd, float *gains) {
-	cout << "Start gentle GOTO" << endl;
-
-	// Set gains
-	Robot->setGains(JGOTO, gains);
-	Robot->setGains(GOTO, gains);
-	Robot->setGains(FLOATMODE, gains);
-	Robot->setGains(NO_CONTROL, gains);
-	getGains(Robot);
-
-	// Output the joint command
-	Robot->control(GOTO, xd, 7);
-
-    // Wait for the robot to stop
-	float dq[6];
-	do
-	{
-		Robot->getStatus(GET_JVEL,dq);
-	}while(!jposStopped(dq));
-	cout << "Complete gentle GOTO" << endl;
-}
 
 void MoveGOTO(RobotCom *Robot, float *xd, float *x, float *gains)
 {
 	cout << "Start GOTO" << endl;
-	Robot->setGains(JGOTO, gains);
-	Robot->setGains(GOTO, gains);
-	Robot->setGains(FLOATMODE, gains);
-	Robot->setGains(NO_CONTROL, gains);
-	getGains(Robot);
+        setGains(Robot, gains);
 	// Output the joint command
 	Robot->control(GOTO, xd, 7);
-	getGains(Robot);
 
 	// Wait for the robot to finish motion
 	do
@@ -266,6 +244,52 @@ void MoveGOTO(RobotCom *Robot, float *xd, float *x, float *gains)
 		Robot->getStatus(GET_IPOS,x);
 	}while(!xposReached(xd,x));
 	cout << "Complete GOTO" << endl;
+}
+
+
+void GentlyMoveAlongAxisUntilStopped(RobotCom *Robot, float *xi, int AXIS, float distance, float stepSize) {
+	cout << "Start move along axis" << endl;
+
+        float x[X_DOF], xd[X_DOF], dq[J_DOF];
+        float signed_step = (distance>0 ? stepSize : -stepSize);
+        bool increasing = (distance>0);
+
+        for(int i=0; i<X_DOF; i++) xd[i] = xi[i];
+
+	MoveGOTO(Robot, xi, x, default_gains);
+
+	// Set gains
+        setGains(Robot, default_gains);
+
+        do {
+                Robot->getStatus(GET_IPOS, x);
+                xd[AXIS] = x[AXIS] + signed_step;
+                if(increasing)  xd[AXIS] = min(xd[AXIS], xi[AXIS]+distance);
+                if(!increasing) xd[AXIS] = max(xd[AXIS], xi[AXIS]-distance);
+                Robot->control(GOTO, xd, X_DOF);
+		Robot->getStatus(GET_JVEL,dq);
+        } while(!jposStopped(dq));
+
+	cout << "Complete move along axis" << endl;
+}
+
+// Move towards the goal until you are stopped
+void GentlyMoveGOTO(RobotCom *Robot, float *xd, float *gains) {
+	cout << "Start gentle GOTO" << endl;
+
+	// Set gains
+        setGains(Robot, gains);
+
+	// Output the joint command
+	Robot->control(GOTO, xd, X_DOF);
+
+    // Wait for the robot to stop
+	float dq[J_DOF];
+	do
+	{
+		Robot->getStatus(GET_JVEL,dq);
+	}while(!jposStopped(dq));
+	cout << "Complete gentle GOTO" << endl;
 }
 
 void prepPickUp(RobotCom* bot, HANDLE & serial)
