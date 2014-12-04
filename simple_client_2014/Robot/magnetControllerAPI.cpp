@@ -74,14 +74,17 @@ HANDLE magnetInit(char* portName)
 
 void magnetOn (HANDLE hSerial)
 {
-	unsigned char sendBuff[4] = {0};
-	DWORD dwBytesRead = 0;
-	
-	sendBuff[0] = 'a';
-
-	if(!WriteFile(hSerial, &sendBuff, 1, &dwBytesRead, NULL))
+	for (int i = 0; i < 2; i++)
 	{
-		cout << "Serial communication error!\n";
+		unsigned char sendBuff[4] = {0};
+		DWORD dwBytesRead = 0;
+	
+		sendBuff[0] = 'a';
+
+		if(!WriteFile(hSerial, &sendBuff, 1, &dwBytesRead, NULL))
+		{
+			cout << "Serial communication error!\n";
+		}
 	}
 		
 	return;
@@ -89,16 +92,19 @@ void magnetOn (HANDLE hSerial)
 
 void magnetOff (HANDLE hSerial)
 {
-	unsigned char sendBuff[4] = {0};
-	DWORD dwBytesRead = 0;
-	
-	sendBuff[0] = 'b';
-
-	if(!WriteFile(hSerial, &sendBuff, 1, &dwBytesRead, NULL))
+	for (int i = 0; i < 2; i++)
 	{
-		cout << "Serial communication error!\n";
-	}
+		unsigned char sendBuff[4] = {0};
+		DWORD dwBytesRead = 0;
+	
+		sendBuff[0] = 'b';
+
+		if(!WriteFile(hSerial, &sendBuff, 1, &dwBytesRead, NULL))
+		{
+			cout << "Serial communication error!\n";
+		}
 		
+	}
 	return;
 }
 
