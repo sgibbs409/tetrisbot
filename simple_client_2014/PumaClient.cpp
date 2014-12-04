@@ -50,8 +50,9 @@ const int X_DOF = 7; // task space
 const int J_DOF = 6; // Joint space
 
 // home position
-float HOME_XPOS[X_DOF] = {0, -0.65, 0, 0.5, 0.5, 0.5,-0.5};
-float HOME_JPOS[J_DOF] = {-107.6, -57.4, 207, -19.9,-61, 9.8};
+float HOME_XPOS[X_DOF] = {0.70, 0, 0, 0.71, 0.0, 0.71,0.0};
+//float HOME_JPOS[J_DOF] = {-107.6, -57.4, 207, -19.9,-61, 9.8};
+float HOME_JPOS[J_DOF] = {-17.6, -57.4, 207, -19.9,-61, 9.8};
 
 // The positions of the tetrominos. Needs calibration.
 float squarePos[X_DOF];
@@ -72,12 +73,20 @@ enum Position {
 	VY,
 	VZ
 };
-
+/*
 float orientations[4][4] = {
 	{0.5, 0.5, 0.5, -0.5},
 	{0.71, 0.71, 0, 0},
 	{0.5, 0.5, -0.5, 0.5},
 	{0, 0, 0.71, -0.71}
+};
+*/
+
+float orientations[4][4] = {
+	{0.71, 0, 0.71, 0},
+	{0.5, 0.5, 0.5, 0.5},
+	{0, 0.71, 0, 0.71},
+	{0.5, -0.5, 0.5, -0.5}
 };
 
 float default_gains[12] = { 400, 400, 400, 400, 400, 400, 40, 40, 40, 40, 40, 40 };
@@ -109,7 +118,7 @@ void moveTo(float *x_goal, int target_x, int target_y, int &curr_x, int &curr_y,
 	curr_y = max(0, min(NUM_SQUARES_HIGH, target_y));
 	curr_x = max(0, min(NUM_SQUARES_WIDE, target_x));
 
-	x_goal[X] = SQUARE_SIZE*(curr_x-NUM_SQUARES_WIDE/2);
+	x_goal[Y] = SQUARE_SIZE*(curr_x-NUM_SQUARES_WIDE/2);
 	x_goal[Z] = -SQUARE_SIZE*(curr_y-NUM_SQUARES_HIGH/2);
 	assert(rotation>=0 && rotation<4);
 	for(int i=0; i<4; i++) x_goal[3+i] = orientations[rotation][i];
@@ -296,7 +305,7 @@ void prepPickUp(RobotCom* bot, HANDLE & serial)
 {
 	float prep_pick_pos[J_DOF];
 	for(int i = 0; i < J_DOF; i++) prep_pick_pos[i] = HOME_JPOS[i];
-	prep_pick_pos[0] += 70;
+	prep_pick_pos[0] -= 90;
 	prep_pick_pos[4] += 90;
 
 	float dq_[J_DOF], q_[J_DOF]; 
@@ -345,16 +354,6 @@ void goHome(RobotCom* bot, float *x_goal)
 	
 	MoveJGOTO(bot, HOME_JPOS, q_, dq_, default_gains);
 	MoveGOTO(bot, HOME_XPOS, x_, default_gains);
-}
-
-void moveToTop(RobotCom* bot, float *x_goal)
-{
-	float xd_[X_DOF] = {0, -0.65, 0.3, 0.5,0.5,0.5,-0.5};
-	for(int i=0; i<X_DOF; i++) x_goal[i] = xd_[i];
-	float x_[X_DOF];
-
-	MoveGOTO(bot, xd_, x_, default_gains);
-	cout << "top" << endl;
 }
 
 void recordBlockPos(float* position_array, string name, RobotCom* PumaRobot)
@@ -531,11 +530,11 @@ int main(int argc, char **argv)
 					pickUpBlock(PumaRobot, squarePos, serial); 
 			}
 			if(s=="PLACE") {
-				x_goal[Y]=-0.8;
+				x_goal[X]=0.8;
 				GentlyMoveGOTO(PumaRobot, x_goal, low_gains);
 				magnetOff(serial);
 				_sleep(1000); 
-				x_goal[Y]=-0.65;
+				x_goal[X]=0.7;
 				MoveGOTO(PumaRobot, x_goal, x_, low_gains);
 				moveTo(x_goal, 5, 0, curr_x, curr_y, 0);
 				MoveGOTO(PumaRobot, x_goal, x_, default_gains);
