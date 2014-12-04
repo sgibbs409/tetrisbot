@@ -8,7 +8,7 @@ import socket
 import sys
 
 host = '' 
-port = 8189 
+port = 8187 
 backlog = 5 
 size = 1024 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 

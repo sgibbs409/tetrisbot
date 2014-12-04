@@ -50,7 +50,7 @@ const int X_DOF = 7; // task space
 const int J_DOF = 6; // Joint space
 
 // home position
-float HOME_XPOS[X_DOF] = {0, -0.65, 0, 0.5, 0.5, 0.5,-0.5};
+float HOME_XPOS[X_DOF] = {0, -0.70, 0, 0.5, 0.5, 0.5,-0.5};
 float HOME_JPOS[J_DOF] = {-107.6, -57.4, 207, -19.9,-61, 9.8};
 
 // The positions of the tetrominos. Needs calibration.
@@ -81,6 +81,7 @@ float orientations[4][4] = {
 };
 
 float default_gains[12] = { 400, 400, 400, 400, 400, 400, 40, 40, 40, 40, 40, 40 };
+float half_gains[12] = { 200, 200, 200, 200, 200, 200, 20, 20, 20, 20, 20, 20 };
 float high_gains_last_joint[12] = { 400, 400, 400, 400, 400, 4000, 40, 40, 40, 40, 40, 80 };
 float low_gains[12] = { 100, 100, 100, 100, 100, 100, 10, 10, 10, 10, 10, 10 };
 float testlow_gains[12] = { 100, 100, 100, 100, 100, 100, 40, 40, 40, 40, 40, 40 };
@@ -296,12 +297,12 @@ void prepPickUp(RobotCom* bot, HANDLE & serial)
 {
 	float prep_pick_pos[J_DOF];
 	for(int i = 0; i < J_DOF; i++) prep_pick_pos[i] = HOME_JPOS[i];
-	prep_pick_pos[0] += 70;
+	prep_pick_pos[0] += 90;
 	prep_pick_pos[4] += 90;
 
 	float dq_[J_DOF], q_[J_DOF]; 
 
-	MoveJGOTO(bot, prep_pick_pos, q_, dq_, default_gains);
+	MoveJGOTO(bot, prep_pick_pos, q_, dq_, half_gains);
 }
 
 void pickUpBlock(RobotCom* bot, float *block_pos, HANDLE & serial)
@@ -311,29 +312,35 @@ void pickUpBlock(RobotCom* bot, float *block_pos, HANDLE & serial)
 	
 	float pick_up_pos[X_DOF];
 	for(int i = 0; i < X_DOF; i++) pick_up_pos[i] = block_pos[i];
-	pick_up_pos[Z] -= 0.25;
+	pick_up_pos[Z] -= 0.1;
 
 	// Go home first
 	float dq_[J_DOF], q_[J_DOF]; 
-	MoveJGOTO(bot, HOME_JPOS, q_, dq_, default_gains);
+	MoveJGOTO(bot, HOME_JPOS, q_, dq_, half_gains);
 	// Go to prepare for pick up position
 	prepPickUp(bot, serial);
 
 	// Pick up block
 	MoveGOTO(bot, block_pos, x_, default_gains);
-	GentlyMoveGOTO(bot, pick_up_pos, verylow_gains);
+	
+	char k;
+	cin >> k;
+
+	GentlyMoveGOTO(bot, pick_up_pos, low_gains);
 
 	magnetOn(serial);
 	cout << "magnet On" << endl;
 
-	GentlyMoveGOTO(bot, block_pos, verylow_gains);
+	GentlyMoveGOTO(bot, block_pos, low_gains);
 
 	// Go back to to prepare for pick up position
 	prepPickUp(bot, serial);
 
 	//go home after you have the block
-	MoveJGOTO(bot, HOME_JPOS, q_, dq_, default_gains);
+	MoveJGOTO(bot, HOME_JPOS, q_, dq_, half_gains);
 	MoveGOTO(bot, HOME_XPOS, x_, default_gains);
+
+	cin >> k;
 }
 
 void goHome(RobotCom* bot, float *x_goal)
@@ -343,18 +350,8 @@ void goHome(RobotCom* bot, float *x_goal)
 	float x_[X_DOF];
 	float dq_[J_DOF], q_[J_DOF]; 
 	
-	MoveJGOTO(bot, HOME_JPOS, q_, dq_, default_gains);
+	MoveJGOTO(bot, HOME_JPOS, q_, dq_, half_gains);
 	MoveGOTO(bot, HOME_XPOS, x_, default_gains);
-}
-
-void moveToTop(RobotCom* bot, float *x_goal)
-{
-	float xd_[X_DOF] = {0, -0.65, 0.3, 0.5,0.5,0.5,-0.5};
-	for(int i=0; i<X_DOF; i++) x_goal[i] = xd_[i];
-	float x_[X_DOF];
-
-	MoveGOTO(bot, xd_, x_, default_gains);
-	cout << "top" << endl;
 }
 
 void recordBlockPos(float* position_array, string name, RobotCom* PumaRobot)
@@ -371,6 +368,9 @@ void recordBlockPos(float* position_array, string name, RobotCom* PumaRobot)
 	}
 
 	PumaRobot->getStatus(GET_IPOS, position_array);
+
+	for (int i = 0; i < X_DOF; i++) 
+		cout << "read position " << position_array[i] << " " << endl;
 }
 
 void loadPositionArray(float *pos_arr, ifstream & fin)
@@ -383,7 +383,7 @@ void loadPositionArray(float *pos_arr, ifstream & fin)
 		iss >> pos_arr[i];
 
 	for (int i = 0; i < X_DOF; i++) 
-		cout << pos_arr[i] << " " << endl;
+		cout << "loading from file " << pos_arr[i] << " " << endl;
 
 }
 
@@ -474,7 +474,6 @@ int main(int argc, char **argv)
 
 	RobotCom* PumaRobot = new RobotCom();
 
-	getGains(PumaRobot);
 	waitForStart(PumaRobot);
 
 	calibratePositions(PumaRobot, serial);
@@ -532,23 +531,30 @@ int main(int argc, char **argv)
 			}
 			if(s=="PLACE") {
 				x_goal[Y]=-0.8;
-				GentlyMoveGOTO(PumaRobot, x_goal, low_gains);
+				GentlyMoveGOTO(PumaRobot, x_goal, half_gains);
 				magnetOff(serial);
 				_sleep(1000); 
-				x_goal[Y]=-0.65;
-				MoveGOTO(PumaRobot, x_goal, x_, low_gains);
-				moveTo(x_goal, 5, 0, curr_x, curr_y, 0);
-				MoveGOTO(PumaRobot, x_goal, x_, default_gains);
+				x_goal[Y]=-0.70;
+				MoveGOTO(PumaRobot, x_goal, x_, half_gains);
 			} else {
 				//MoveGOTO(PumaRobot, x_goal, x_, high_gains_last_joint);
 				MoveGOTO(PumaRobot, x_goal, x_, default_gains);
 			}
+			if(s == "M ON")
+			{
+				magnetOn(serial);
+			}
+			if(s == "M OFF")
+			{
+				magnetOff(serial);
+			}
+
 			TetrisServer->sendOK();
 		}
 	}
 
 	PumaRobot->_float();
-	//Sleep(2000);
+	Sleep(2000);
 	PumaRobot->~RobotCom();
 
 	return 0;
