@@ -154,6 +154,10 @@ PIECES = {'S': S_SHAPE_TEMPLATE,
           'O': O_SHAPE_TEMPLATE,
           'T': T_SHAPE_TEMPLATE}
 
+inventory = ['O']*9 + ['L']*2 + ['J']*1 + ['Z']*2 + ['S']*3
+random.shuffle(inventory)
+block_iterator = inventory.__iter__()
+
 LAST_STATE = (-1,-1,0)
 
 def puma_wait_for_ok():
@@ -247,6 +251,8 @@ def runGame():
 	    #puma_moveto(int(BOARDWIDTH / 2) - int(TEMPLATEWIDTH / 2), 0, 0)
 	    #else:
                 # No falling piece in play, so start a new piece at the top
+            if nextPiece is None:
+                terminate()
             fallingPiece = nextPiece
             nextPiece = getNewPiece()
             puma_pick(fallingPiece['shape'])
@@ -357,7 +363,7 @@ def runGame():
         DISPLAYSURF.fill(BGCOLOR)
         drawBoard(board)
         drawStatus(score, level)
-        drawNextPiece(nextPiece)
+        if nextPiece: drawNextPiece(nextPiece)
         if fallingPiece != None:
             drawPiece(fallingPiece)
 
@@ -429,7 +435,11 @@ def calculateLevelAndFallFreq(score):
 
 def getNewPiece():
     # return a random new piece in a random rotation and color
-    shape = random.choice(list(PIECES.keys()))
+    #shape = random.choice(list(PIECES.keys()))
+    try:
+        shape = block_iterator.next()
+    except StopIteration:
+        return None
     newPiece = {'shape': shape,
                 'rotation': random.randint(0, len(PIECES[shape]) - 1),
                 'x': int(BOARDWIDTH / 2) - int(TEMPLATEWIDTH / 2),
